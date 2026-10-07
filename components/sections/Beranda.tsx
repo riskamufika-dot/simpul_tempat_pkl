@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HeroSection() {
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic pencarian
+    const targetElement = document.getElementById('daftar-tempat');
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      router.push(searchQuery ? `/daftar-tempat?search=${encodeURIComponent(searchQuery)}` : '/daftar-tempat');
+    }
   };
 
   return (

@@ -1,4 +1,3 @@
-// File: src/components/sections/HeaderDaftarTempat.tsx
 export default function HeaderDaftarTempat() {
   return (
     <div className="bg-white py-12 px-6 text-center">

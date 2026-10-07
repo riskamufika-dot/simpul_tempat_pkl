@@ -6,15 +6,12 @@ import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
-// Komponen Halaman Beranda (Kiri)
+// Komponen Halaman Beranda
 import HeaderBeranda from '@/components/sections/Beranda'; // "Temukan tempat PKL"
 import FiturUtama from '@/components/sections/FiturUtama';       // "Semua yang Anda butuhkan"
 import LangkahPKL from '@/components/sections/Langkah';     // "Cari tempat PKL yang sesuai..."
-
-// Komponen Halaman Daftar Tempat (Kanan)
-import HeaderDaftarTempat from '@/components/sections/DaftarTempat'; // "Cari & Bandingkan..."
-import FilterTempat from '@/components/catalog/FilterTempat';             // Filter
-import KartuTempatPKL from '@/components/catalog/KartuTempatPKL';         // Kartu PT
+import KategoriJurusan from '@/components/sections/KategoriJurusan'; // "Kategori Jurusan PKL"
+import Testimonial from '@/components/sections/Testimonial';         // "Testimoni Siswa"
 
 // Modals
 import PopUpDetail from '@/components/modals/PopUpDetail';
@@ -28,19 +25,12 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       <Navbar onOpenCompare={() => setIsCompareOpen(true)} />
 
-      {/* ==================== 1. BAGIAN BERANDA (SEBELAH KIRI) ==================== */}
       <section id="beranda">
         <HeaderBeranda />
         <FiturUtama />
         <LangkahPKL />
-      </section>
-
-      {/* ==================== 2. BAGIAN DAFTAR TEMPAT (SEBELAH KANAN) ==================== */}
-      <section id="daftar-tempat" className="pt-10">
-        {/* Header Khusus Daftar Tempat */}
-        <HeaderDaftarTempat />
-
-      
+        <KategoriJurusan />
+        <Testimonial />
       </section>
 
       <Footer />

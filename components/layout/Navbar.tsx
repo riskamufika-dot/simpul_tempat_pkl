@@ -29,7 +29,7 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
           <Link href="/" className="hover:text-white transition-colors">
             Beranda
           </Link>
-          <Link href="DaftarTempat" className="hover:text-white transition-colors">
+          <Link href="/daftar-tempat" className="hover:text-white transition-colors">
             Daftar Tempat
           </Link>
           <Link href="#tentang-kami" className="hover:text-white transition-colors">

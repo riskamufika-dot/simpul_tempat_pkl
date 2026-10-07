@@ -28,7 +28,7 @@ const stepsData: StepItem[] = [
     title: "Baca detail lengkap setiap tempat PKL",
     description:
       "Lihat gambaran tempat, kegiatan, bidang, dan lokasi. Pahami apa yang akan Anda kerjakan.",
-    imageSrc:"/images/langkah1.jpeg",
+    imageSrc:"/images/langkah2.jpeg",
     imageAlt: "Detail laptop",
     reverse: true,
   },
