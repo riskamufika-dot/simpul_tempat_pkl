@@ -29,7 +29,7 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
           <Link href="/" className="hover:text-white transition-colors">
             Beranda
           </Link>
-          <Link href="#daftar-tempat" className="hover:text-white transition-colors">
+          <Link href="DaftarTempat" className="hover:text-white transition-colors">
             Daftar Tempat
           </Link>
           <Link href="#tentang-kami" className="hover:text-white transition-colors">
@@ -40,10 +40,12 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
         {/* CTA Button Bandingkan */}
         <button
           onClick={onOpenCompare}
-          className="bg-amber-400 hover:bg-amber-500 text-blue-950 px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 transition shadow-sm"
-        >
-          <span>⚖️ Banding</span>
-          <span className="bg-amber-500/80 text-blue-950 text-[10px] px-2 py-0.5 rounded-full font-black">
+          className="border border-white/80 hover:bg-white/10 text-white px-4 py-2 rounded-full text-sm font-serif flex items-center gap-2.5 transition shadow-sm"
+          >
+          <span className="flex items-center gap-1.5">
+            ⚖️ Banding
+          </span>
+          <span className="border border-white/80 text-white text-[11px] px-2.5 py-0.5 rounded-full font-serif">
             {compareCount}/2
           </span>
         </button>

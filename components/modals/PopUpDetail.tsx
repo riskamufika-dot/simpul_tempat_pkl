@@ -5,9 +5,10 @@ import React from "react";
 interface DetailModalProps {
   isOpen: boolean;
   onClose: () => void;
+  item?: any; // <--- Tambahkan prop item di sini
 }
 
-export default function DetailModal({ isOpen, onClose }: DetailModalProps) {
+export default function DetailModal({ isOpen, onClose, item }: DetailModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -47,7 +48,7 @@ export default function DetailModal({ isOpen, onClose }: DetailModalProps) {
         </div>
 
         <div className="space-y-2 text-sm text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-100">
-          <p><strong>Alamat:</strong> Jl. Telekomunikasi No. 1, Terusan Buahbatu, Bandung</p>
+          <p><strong>Alamat:</strong> {item?.address || "Jl. Telekomunikasi No. 1, Terusan Buahbatu, Bandung"}</p>
           <p><strong>Keterangan:</strong> Lokasi strategis, dekat rute angkutan umum.</p>
         </div>
 

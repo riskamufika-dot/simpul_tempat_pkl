@@ -2,10 +2,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/layout/Navbar"; // Orang 1 (ubah ke { Navbar } jika named export)
 import Footer from "@/components/layout/Footer"; // Orang 1
-import FilterSection from "@/components/catalog/FilterSection";
-import PlaceCard from "@/components/catalog/PlaceCard";
-import PlaceSkeleton from "@/components/catalog/PlaceSkeleton";
-import CompareBar from "@/components/catalog/CompareBar";
+import FilterSection from "@/components/catalog/FilterTempat";
+import PlaceCard from "@/components/catalog/KartuTempatPKL";
+import PlaceSkeleton from "@/components/catalog/LoadingKartu";
+import CompareBar from "@/components/catalog/BarBandingkan";
 import { getPlaces } from "@/lib/strapi";
 import { EMPTY_FILTER, type CompareMode, type Filter, type Place } from "@/types";
 

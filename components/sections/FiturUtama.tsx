@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import DetailModal from "@/components/modals/DetailModal";
-import CompareModal from "@/components/modals/CompareModal";
+import DetailModal from "@/components/modals/PopUpDetail";
+import CompareModal from "@/components/modals/PopUpBandingkan";
 
 interface FeatureItem {
   id: number;

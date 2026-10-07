@@ -18,8 +18,7 @@ const stepsData: StepItem[] = [
     title: "Cari tempat PKL yang sesuai dengan minat Anda",
     description:
       "Gunakan kata kunci atau jelajahi daftar tempat yang tersedia. Pilih bidang yang Anda inginkan.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+    imageSrc:"/images/langkah1.jpeg",
     imageAlt: "Suasana kantor",
     reverse: false,
   },
@@ -29,8 +28,7 @@ const stepsData: StepItem[] = [
     title: "Baca detail lengkap setiap tempat PKL",
     description:
       "Lihat gambaran tempat, kegiatan, bidang, dan lokasi. Pahami apa yang akan Anda kerjakan.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=800&q=80",
+    imageSrc:"/images/langkah1.jpeg",
     imageAlt: "Detail laptop",
     reverse: true,
   },
@@ -40,8 +38,7 @@ const stepsData: StepItem[] = [
     title: "Bandingkan beberapa tempat PKL sekaligus",
     description:
       "Gunakan fitur perbandingan untuk melihat kelebihan dan kekurangan setiap tempat secara berdampingan.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
+    imageSrc:"/images/langkah3.jpeg",
     imageAlt: "Ruang komputer",
     reverse: false,
   },
@@ -51,8 +48,7 @@ const stepsData: StepItem[] = [
     title: "Tentukan tempat PKL yang paling sesuai",
     description:
       "Setelah membandingkan, pilih tempat yang paling cocok dengan minat dan kebutuhan Anda. Siapkan dokumen.",
-    imageSrc:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    imageSrc:"/images/langkah4.jpeg",
     imageAlt: "Memilih tempat",
     reverse: true,
   },

@@ -46,19 +46,6 @@ export default function HeroSection() {
         </div>
 
         <hr className="border-gray-100 my-12" />
-
-        {/* Banner Visi 2: Value Proposition Header */}
-        <div className="space-y-3 max-w-3xl mx-auto pt-4">
-          <h2 className="text-3xl md:text-5xl font-black text-black tracking-tight leading-tight">
-            Cari & Bandingkan Tempat PKL
-          </h2>
-          <h3 className="text-2xl md:text-4xl font-extrabold text-blue-900">
-            Sesuai Kompetensi Jurusanmu
-          </h3>
-          <p className="text-gray-500 text-xs md:text-sm max-w-xl mx-auto pt-2 leading-relaxed">
-            Dapatkan informasi transparan mengenai jobdesk harian, besaran uang saku, sisa kuota, serta ulasan nyata kakak kelas terdahulu.
-          </p>
-        </div>
       </div>
     </section>
   );

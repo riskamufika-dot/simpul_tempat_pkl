@@ -5,9 +5,10 @@ import React from "react";
 interface CompareModalProps {
   isOpen: boolean;
   onClose: () => void;
+  items?: any[]; // <--- Tambahkan prop items di sini
 }
 
-export default function CompareModal({ isOpen, onClose }: CompareModalProps) {
+export default function CompareModal({ isOpen, onClose, items }: CompareModalProps) {
   if (!isOpen) return null;
 
   return (
