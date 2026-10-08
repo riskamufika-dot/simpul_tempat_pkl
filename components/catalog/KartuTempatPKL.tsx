@@ -1,61 +1,44 @@
-"use client";
-
-import type { Place } from "@/types";
+import { TempatPKL } from "@/types";
 
 interface Props {
-  place?: Place | any;
-  selected?: boolean;
-  canSelect?: boolean;
-  onDetail?: (place: any) => void;
-  onToggleCompare?: (place: any) => void;
+  tempat: TempatPKL;
+  dipilih: boolean;
+  onDetail: (t: TempatPKL) => void;
+  onBandingkan: (t: TempatPKL) => void;
 }
 
-const btn =
-  "flex-1 rounded-full bg-slate-200 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
-
-const dummyPlace: Partial<Place> = {
-  id: 1,
-  nama: "PT SAWALA Inovasi Indonesia",
-  jurusan: "Rekayasa Perangkat Lunak",
-  role: ["Frontend", "Backend"],
-  deskripsi: "Deskripsi singkat tempat PKL...",
-  gambar: "/images/sawala.jpg",
-};
-
-export default function PlaceCard({
-  place = dummyPlace,
-  selected = false,
-  canSelect = true,
-  onDetail = () => {},
-  onToggleCompare = () => {},
-}: Props) {
+export default function KartuTempatPKL({ tempat, dipilih, onDetail, onBandingkan }: Props) {
   return (
-    <article className={`flex flex-col gap-3 rounded-2xl bg-white p-2 ${selected ? "ring-4 ring-sky-400" : ""}`}>
-      <div className="aspect-[16/9] overflow-hidden rounded-xl bg-slate-200">
-        {place?.gambar && (
+    <article className="rounded-2xl bg-white p-3 shadow-md">
+      <div className="h-44 overflow-hidden rounded-xl bg-gray-200">
+        {tempat.gambar && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={place.gambar} alt={place.nama || "Tempat PKL"} className="h-full w-full object-cover" />
+          <img src={tempat.gambar} alt={tempat.nama} className="h-full w-full object-cover" />
         )}
       </div>
 
-      <div className="space-y-2 px-2">
-        <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-          {place?.jurusan || "Jurusan"}
-        </span>
-        <h3 className="text-lg font-semibold text-slate-900">{place?.nama || "Nama Tempat"}</h3>
-        <p className="text-xs text-slate-700">{place?.role?.join(", ")}</p>
-        <p className="line-clamp-3 text-xs text-slate-600">{place?.deskripsi}</p>
-      </div>
+      <span className="mt-3 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+        {tempat.jurusan}
+      </span>
 
-      <div className="mt-auto flex gap-2 px-2 pb-2">
-        <button className={btn} onClick={() => onDetail(place)}>Detail</button>
+      <h3 className="mt-1 text-lg font-semibold text-[#101d42]">{tempat.nama}</h3>
+      <p className="mt-1 text-[11px] text-gray-500">{tempat.role.join(", ")}</p>
+      <p className="mt-2 line-clamp-3 text-[11px] text-gray-500">{tempat.deskripsi}</p>
+
+      <div className="mt-4 flex gap-2">
         <button
-          className={btn}
-          aria-pressed={selected}
-          disabled={!selected && !canSelect}
-          onClick={() => onToggleCompare(place)}
+          onClick={() => onDetail(tempat)}
+          className="flex-1 rounded-full bg-gray-100 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200"
         >
-          {selected ? "Batal pilih" : "+ Bandingkan"}
+          Detail
+        </button>
+        <button
+          onClick={() => onBandingkan(tempat)}
+          className={`flex-1 rounded-full py-1.5 text-xs font-medium ${
+            dipilih ? "bg-[#101d42] text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          {dipilih ? "✓ Dipilih" : "+ Bandingkan"}
         </button>
       </div>
     </article>

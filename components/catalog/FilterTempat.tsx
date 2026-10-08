@@ -1,40 +1,27 @@
-"use client";
-import type { Filter } from "@/types";
-import { BIDANG_LIST, JURUSAN_LIST } from "@/types";
-
 interface Props {
-  filter?: Filter;
-  onChange?: (filter: Filter) => void;
+  bidang: string;
+  jurusan: string;
+  daftarBidang: string[];
+  daftarJurusan: string[];
+  onBidang: (v: string) => void;
+  onJurusan: (v: string) => void;
 }
 
-const select =
-  "w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-400";
+const selectClass =
+  "w-52 rounded-lg bg-white px-3 py-2 text-sm text-gray-700 outline-none";
 
-export default function FilterSection({
-  filter = { bidang: "", jurusan: "" },
-  onChange = () => {},
-}: Props) {
+export default function FilterTempat(p: Props) {
   return (
-    <section aria-label="Filter tempat PKL" className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-wrap items-center gap-3">
       <span className="font-semibold text-white">Filter:</span>
-      <select
-        aria-label="Filter bidang"
-        value={filter.bidang}
-        onChange={(e) => onChange({ ...filter, bidang: e.target.value })}
-        className={select}
-      >
+      <select value={p.bidang} onChange={(e) => p.onBidang(e.target.value)} className={selectClass}>
         <option value="">Semua Bidang</option>
-        {BIDANG_LIST?.map((b) => <option key={b}>{b}</option>)}
+        {p.daftarBidang.map((b) => <option key={b} value={b}>{b}</option>)}
       </select>
-      <select
-        aria-label="Filter jurusan"
-        value={filter.jurusan}
-        onChange={(e) => onChange({ ...filter, jurusan: e.target.value })}
-        className={select}
-      >
+      <select value={p.jurusan} onChange={(e) => p.onJurusan(e.target.value)} className={selectClass}>
         <option value="">Semua Jurusan</option>
-        {JURUSAN_LIST?.map((j) => <option key={j}>{j}</option>)}
+        {p.daftarJurusan.map((j) => <option key={j} value={j}>{j}</option>)}
       </select>
-    </section>
+    </div>
   );
 }

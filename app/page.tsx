@@ -7,18 +7,16 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 // Komponen Halaman Beranda
-import HeaderBeranda from '@/components/sections/Beranda'; // "Temukan tempat PKL"
-import FiturUtama from '@/components/sections/FiturUtama';       // "Semua yang Anda butuhkan"
-import LangkahPKL from '@/components/sections/Langkah';     // "Cari tempat PKL yang sesuai..."
-import KategoriJurusan from '@/components/sections/KategoriJurusan'; // "Kategori Jurusan PKL"
-import Testimonial from '@/components/sections/Testimonial';         // "Testimoni Siswa"
+import HeaderBeranda from '@/components/sections/Beranda';
+import FiturUtama from '@/components/sections/FiturUtama';
+import LangkahPKL from '@/components/sections/Langkah';
+import KategoriJurusan from '@/components/sections/KategoriJurusan';
+import Testimonial from '@/components/sections/Testimonial';
 
 // Modals
-import PopUpDetail from '@/components/modals/PopUpDetail';
 import PopUpBandingkan from '@/components/modals/PopUpBandingkan';
 
 export default function Home() {
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   return (
@@ -35,9 +33,11 @@ export default function Home() {
 
       <Footer />
 
-      {/* Modals */}
-      <PopUpDetail isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} />
-      <PopUpBandingkan isOpen={isCompareOpen} onClose={() => setIsCompareOpen(false)} />
+      <PopUpBandingkan
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        items={[]}
+      />
     </main>
   );
 }
