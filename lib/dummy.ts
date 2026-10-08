@@ -42,4 +42,33 @@ export const DUMMY_TEMPAT: TempatPKL[] = [
     },
     linkMaps: null,
   },
+  {
+    id: 2,
+    nama: "PT SAWALA Inovasi Indonesia",
+    jurusan: "Rekayasa Perangkat Lunak (RPL)",
+    singkatanJurusan: "RPL",
+    deskripsi:
+      "Perusahaan pengembang perangkat lunak yang menerima siswa PKL untuk mengerjakan proyek web dan aplikasi.",
+    alamat: "Bandung, Jawa Barat",
+    jarak: "",
+    gambar: null,
+    jamKerja: ["08.00 – 16.00 WIB"],
+    kuota: "2 Siswa",
+    role: ["Frontend Development", "Backend Development", "UI/UX Designer"],
+    tugas: [
+      "Membantu pengembangan fitur web",
+      "Menguji dan memperbaiki bug",
+      "Membuat desain antarmuka sesuai arahan tim",
+    ],
+    syaratBerkas: [
+      "Surat pengantar PKL dari sekolah",
+      "Fotokopi kartu pelajar",
+    ],
+    fasilitas: [
+      "Pembimbing selama kegiatan PKL",
+      "Pengalaman mengerjakan proyek nyata",
+    ],
+    testimoni: null,
+    linkMaps: null,
+  },
 ];
