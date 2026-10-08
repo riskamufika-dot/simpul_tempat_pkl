@@ -141,7 +141,7 @@ export default function DaftarTempatPage() {
           </div>
 
           {!loading && !error && tampil.length === 0 && (
-            <p className="text-center text-white/70">Tidak ada tempat yang cocok.</p>
+            <p className="text-center text-white/70">Tidak ada tempat yang cocok</p>
           )}
         </div>
       </div>
