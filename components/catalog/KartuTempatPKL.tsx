@@ -1,17 +1,9 @@
 "use client";
 
-// Buat interface lokal agar tidak ketergantungan tipe dari luar
-interface Place {
-  id?: string;
-  nama?: string;
-  jurusan?: string;
-  role?: string[];
-  deskripsi?: string;
-  gambar?: string;
-}
+import type { Place } from "@/types";
 
 interface Props {
-  place?: Place;
+  place?: Place | any;
   selected?: boolean;
   canSelect?: boolean;
   onDetail?: (place: any) => void;
@@ -21,8 +13,8 @@ interface Props {
 const btn =
   "flex-1 rounded-full bg-slate-200 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
 
-const dummyPlace: Place = {
-  id: "1",
+const dummyPlace: Partial<Place> = {
+  id: 1,
   nama: "PT SAWALA Inovasi Indonesia",
   jurusan: "Rekayasa Perangkat Lunak",
   role: ["Frontend", "Backend"],

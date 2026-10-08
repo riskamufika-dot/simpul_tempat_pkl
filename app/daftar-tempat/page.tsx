@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import HeaderDaftarTempat from '@/components/sections/DaftarTempat';
+import HeaderDaftarTempat from '@/components/sections/daftartempat';
 import FilterTempat from '@/components/catalog/FilterTempat';
 import KartuTempatPKL from '@/components/catalog/KartuTempatPKL';
 import PopUpDetail from '@/components/modals/PopUpDetail';

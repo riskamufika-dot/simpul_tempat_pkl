@@ -51,8 +51,6 @@ export default function HeroSection() {
             </button>
           </form>
         </div>
-
-        <hr className="border-gray-100 my-12" />
       </div>
     </section>
   );

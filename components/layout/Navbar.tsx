@@ -32,7 +32,7 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
           <Link href="/daftar-tempat" className="hover:text-white transition-colors">
             Daftar Tempat
           </Link>
-          <Link href="#tentang-kami" className="hover:text-white transition-colors">
+          <Link href="/tentang-kami" className="hover:text-white transition-colors">
             Tentang Kami
           </Link>
         </nav>
