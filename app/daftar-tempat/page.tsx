@@ -57,20 +57,20 @@ export default function DaftarTempatPage() {
   const [terpilih, setTerpilih] = useState<TempatPKL[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
- useEffect(() => {
-  getTempatPKL()
-    .then((hasil) => {
-      setData(hasil.length === 0 && PAKAI_DUMMY ? DUMMY_TEMPAT : hasil);
-    })
-    .catch((e) => {
-      if (PAKAI_DUMMY) {
-        setData(DUMMY_TEMPAT);
-      } else {
-        setError(e.message);
-      }
-    })
-    .finally(() => setLoading(false));
-}, []);
+  useEffect(() => {
+    getTempatPKL()
+      .then((hasil) => {
+        setData(hasil.length === 0 && PAKAI_DUMMY ? DUMMY_TEMPAT : hasil);
+      })
+      .catch((e) => {
+        if (PAKAI_DUMMY) {
+          setData(DUMMY_TEMPAT);
+        } else {
+          setError(e.message);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const daftarBidang = useMemo(
     () => [...new Set(data.flatMap((d) => d.role))].sort(),
@@ -105,7 +105,11 @@ export default function DaftarTempatPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar onOpenCompare={() => setIsCompareOpen(true)} />
+      {/* compareCount dan onOpenCompare tersambung ke navbar */}
+      <Navbar
+        compareCount={terpilih.length}
+        onOpenCompare={() => setIsCompareOpen(true)}
+      />
 
       <HeaderDaftarTempat
         kata={kata}
@@ -152,16 +156,35 @@ export default function DaftarTempatPage() {
         onBandingkan={() => setIsCompareOpen(true)}
       />
 
-      <PopUpDetail
+     <PopUpDetail
   isOpen={detail !== null}
   onClose={() => setDetail(null)}
   company={detail ? toCompanyDetail(detail) : null}
+  isComparing={detail ? terpilih.some((p) => p.id === detail.id) : false}
+  onBandingkan={(comp: any) => {
+    const target = data.find((d) => d.id === comp.id);
+    if (target) {
+      toggleBandingkan(target);
+    }
+  }}
 />
+
       <PopUpBandingkan
-  isOpen={isCompareOpen}
-  onClose={() => setIsCompareOpen(false)}
-  items={terpilih}
-/>
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        items={terpilih}
+        onClear={() => {
+          setTerpilih([]);
+        }}
+        onRemoveItem={(idHapus) => {
+          setTerpilih((prev) =>
+            prev.filter((item, idx) => {
+              const currentId = item.id !== undefined ? item.id : idx;
+              return String(currentId) !== String(idHapus);
+            })
+          );
+        }}
+      />
 
       <Footer />
     </main>
