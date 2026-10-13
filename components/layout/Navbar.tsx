@@ -21,7 +21,15 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
             height={70}
             className="h-auto object-contain"
           />
-          <span className="font-bold text-lg tracking-tight text-white">Tempat PKL</span>
+          <div className="flex flex-col items-start">
+          <span className="font-bold text-xl tracking-tight text-white">
+          SIMPUL
+          </span>
+
+        <span className="text-[10px] text-blue-200 leading-tight">
+          Sistem Informasi Magang & Penempatan Lapangan
+        </span>
+        </div>
         </Link>
 
         {/* Navigation Menu (Font Merriweather) */}
