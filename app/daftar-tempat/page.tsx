@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import HeaderDaftarTempat from "@/components/sections/DaftarTempat";
@@ -10,11 +11,8 @@ import LoadingKartu from "@/components/catalog/LoadingKartu";
 import BarBandingkan from "@/components/catalog/BarBandingkan";
 import PopUpBandingkan from "@/components/modals/PopUpBandingkan";
 import { getTempatPKL } from "@/lib/strapi";
-import { DUMMY_TEMPAT } from "@/lib/dummy";
 import { TempatPKL } from "@/types";
 import PopUpDetail, { CompanyDetail } from "@/components/modals/PopUpDetail";
-
-const PAKAI_DUMMY = true;
 
 function toCompanyDetail(t: TempatPKL): CompanyDetail {
   return {
@@ -43,7 +41,10 @@ function toCompanyDetail(t: TempatPKL): CompanyDetail {
   };
 }
 
-export default function DaftarTempatPage() {
+function DaftarTempatContent() {
+  const searchParams = useSearchParams();
+  const queryJurusan = searchParams.get("jurusan");
+
   const [data, setData] = useState<TempatPKL[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,46 +52,67 @@ export default function DaftarTempatPage() {
   const [kata, setKata] = useState("");
   const [kataAktif, setKataAktif] = useState("");
   const [bidang, setBidang] = useState("");
-  const [jurusan, setJurusan] = useState("");
+  const [jurusan, setJurusan] = useState(queryJurusan || "");
 
   const [detail, setDetail] = useState<TempatPKL | null>(null);
   const [terpilih, setTerpilih] = useState<TempatPKL[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
+  // Ambil seluruh data langsung dari Strapi (hingga 100 data)
   useEffect(() => {
-    getTempatPKL()
-      .then((hasil) => {
-        setData(hasil.length === 0 && PAKAI_DUMMY ? DUMMY_TEMPAT : hasil);
-      })
-      .catch((e) => {
-        if (PAKAI_DUMMY) {
-          setData(DUMMY_TEMPAT);
-        } else {
-          setError(e.message);
-        }
-      })
-      .finally(() => setLoading(false));
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getTempatPKL();
+        setData(res);
+      } catch (err: any) {
+        setError(err.message || "Gagal memuat data tempat PKL.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
   }, []);
+
+  // Update filter jurusan jika query param di URL berubah
+  useEffect(() => {
+    if (queryJurusan) {
+      setJurusan(queryJurusan);
+    }
+  }, [queryJurusan]);
 
   const daftarBidang = useMemo(
     () => [...new Set(data.flatMap((d) => d.role))].sort(),
     [data]
   );
+  
   const daftarJurusan = useMemo(
     () => [...new Set(data.map((d) => d.jurusan))].sort(),
     [data]
   );
 
+  // Filter pencarian & kategori
   const tampil = useMemo(() => {
     const q = kataAktif.toLowerCase();
+    const jFilter = jurusan.toLowerCase();
+
     return data.filter((d) => {
       const cocokKata =
         !q ||
         d.nama.toLowerCase().includes(q) ||
         d.jurusan.toLowerCase().includes(q) ||
         d.role.some((r) => r.toLowerCase().includes(q));
+
       const cocokBidang = !bidang || d.role.includes(bidang);
-      const cocokJurusan = !jurusan || d.jurusan === jurusan;
+
+      // Pencocokan fleksibel agar cocok dengan nama atau singkatan jurusan
+      const cocokJurusan =
+        !jurusan ||
+        d.jurusan.toLowerCase().includes(jFilter) ||
+        jFilter.includes(d.jurusan.toLowerCase());
+
       return cocokKata && cocokBidang && cocokJurusan;
     });
   }, [data, kataAktif, bidang, jurusan]);
@@ -105,7 +127,6 @@ export default function DaftarTempatPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* compareCount dan onOpenCompare tersambung ke navbar */}
       <Navbar
         compareCount={terpilih.length}
         onOpenCompare={() => setIsCompareOpen(true)}
@@ -145,7 +166,9 @@ export default function DaftarTempatPage() {
           </div>
 
           {!loading && !error && tampil.length === 0 && (
-            <p className="text-center text-white/70">Tidak ada tempat yang cocok</p>
+            <p className="text-center text-white/70 py-10">
+              Tidak ada tempat PKL yang cocok dengan kriteria pencarian/jurusan ini.
+            </p>
           )}
         </div>
       </div>
@@ -156,26 +179,26 @@ export default function DaftarTempatPage() {
         onBandingkan={() => setIsCompareOpen(true)}
       />
 
-     <PopUpDetail
-  isOpen={detail !== null}
-  onClose={() => setDetail(null)}
-  company={detail ? toCompanyDetail(detail) : null}
-  isComparing={detail ? terpilih.some((p) => p.id === detail.id) : false}
-  onBandingkan={(comp: any) => {
-    const target = data.find((d) => d.id === comp.id);
-    if (target) {
-      toggleBandingkan(target);
-    }
-  }}
-/>
+      {/* PopUp Detail */}
+      <PopUpDetail
+        isOpen={detail !== null}
+        onClose={() => setDetail(null)}
+        company={detail ? toCompanyDetail(detail) : null}
+        isComparing={detail ? terpilih.some((p) => p.id === detail.id) : false}
+        onBandingkan={(comp: any) => {
+          const target = data.find((d) => d.id === comp.id);
+          if (target) {
+            toggleBandingkan(target);
+          }
+        }}
+      />
 
+      {/* PopUp Bandingkan */}
       <PopUpBandingkan
         isOpen={isCompareOpen}
         onClose={() => setIsCompareOpen(false)}
         items={terpilih}
-        onClear={() => {
-          setTerpilih([]);
-        }}
+        onClear={() => setTerpilih([])}
         onRemoveItem={(idHapus) => {
           setTerpilih((prev) =>
             prev.filter((item, idx) => {
@@ -188,5 +211,13 @@ export default function DaftarTempatPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function DaftarTempatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <DaftarTempatContent />
+    </Suspense>
   );
 }

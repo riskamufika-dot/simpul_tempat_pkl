@@ -10,6 +10,7 @@ interface JurusanItem {
   count: string;
   description: string;
   imageSrc: string;
+  queryFilter: string; // Nilai jurusan persis sesuai database Strapi/Dummy
 }
 
 const jurusanList: JurusanItem[] = [
@@ -20,6 +21,7 @@ const jurusanList: JurusanItem[] = [
     count: '5 Tempat',
     description: 'Tempat PKL siswa dengan Jurusan RPL',
     imageSrc: '/images/logo pplg.png',
+    queryFilter: 'Rekayasa Perangkat Lunak (RPL)', // Sesuaikan format di database jika hanya "RPL" atau "PPLG"
   },
   {
     id: 'akl',
@@ -28,6 +30,7 @@ const jurusanList: JurusanItem[] = [
     count: '5 Tempat',
     description: 'Tempat PKL siswa dengan Jurusan AKL',
     imageSrc: '/images/logo akl.png',
+    queryFilter: 'Akuntansi Keuangan dan Lembaga (AKL)',
   },
   {
     id: 'mplb',
@@ -36,6 +39,7 @@ const jurusanList: JurusanItem[] = [
     count: '5 Tempat',
     description: 'Tempat PKL siswa dengan Jurusan MPLB',
     imageSrc: '/images/logo mplb.png',
+    queryFilter: 'Manajemen Perkantoran dan Layanan Bisnis (MPLB)',
   },
   {
     id: 'pm',
@@ -44,6 +48,7 @@ const jurusanList: JurusanItem[] = [
     count: '5 Tempat',
     description: 'Tempat PKL siswa dengan Jurusan PM',
     imageSrc: '/images/logo pm.png',
+    queryFilter: 'Pemasaran (PM)',
   },
 ];
 
@@ -51,6 +56,7 @@ export default function KategoriJurusan() {
   return (
     <section className="bg-[#182752] py-20 px-6 sm:px-10 lg:px-16 text-white w-full">
       <div className="max-w-7xl mx-auto">
+        {/* Judul Section */}
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
             Kategori Jurusan PKL
@@ -60,15 +66,16 @@ export default function KategoriJurusan() {
           </p>
         </div>
 
+        {/* Grid Kartu Jurusan */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {jurusanList.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-3xl p-6 text-center text-slate-900 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+              className="bg-white rounded-3xl p-6 text-slate-900 shadow-xl hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                {/* Logo Jurusan Gambar */}
-                <div className="flex justify-center mb-5">
+                {/* Logo Jurusan di Tengah */}
+                <div className="flex justify-center mb-6">
                   <div className="relative w-28 h-28 drop-shadow-md">
                     <Image
                       src={item.imageSrc}
@@ -79,29 +86,33 @@ export default function KategoriJurusan() {
                   </div>
                 </div>
 
-                {/* Badge Code & Count */}
-                <div className="inline-block bg-sky-100 text-sky-700 text-[11px] font-bold px-3 py-1 rounded-full mb-3">
-                  {item.code} - {item.count}
+                {/* Badge Rata Kiri */}
+                <div className="text-left mb-3">
+                  <span className="inline-block bg-[#e0edff] text-[#2563eb] text-[11px] font-bold px-3 py-1 rounded-full">
+                    {item.code} - {item.count}
+                  </span>
                 </div>
 
-                {/* Title */}
-                <h3 className="font-extrabold text-base text-gray-900 leading-snug mb-3 min-h-[48px] flex items-center justify-center">
+                {/* Judul Jurusan Rata Kiri */}
+                <h3 className="text-left font-bold text-lg text-gray-900 leading-snug mb-2 min-h-[52px]">
                   {item.name}
                 </h3>
 
-                {/* Description */}
-                <p className="text-gray-500 text-xs leading-relaxed mb-6 font-normal">
+                {/* Deskripsi Rata Kiri */}
+                <p className="text-left text-gray-500 text-xs leading-relaxed mb-6 font-normal">
                   {item.description}
                 </p>
               </div>
 
-              {/* Action Link */}
-              <Link
-                href={`/daftar-tempat?jurusan=${encodeURIComponent(item.name)}`}
-                className="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white text-xs font-semibold py-3 rounded-full block transition shadow-md"
-              >
-                Lihat
-              </Link>
+              {/* Tombol Lihat: Mengarahkan langsung ke filter jurusan di katalog */}
+              <div>
+                <Link
+                  href={`/daftar-tempat?jurusan=${encodeURIComponent(item.queryFilter)}`}
+                  className="w-full bg-[#1c3879] hover:bg-[#162d61] text-white text-sm font-semibold py-2.5 rounded-xl block text-center transition shadow-sm cursor-pointer"
+                >
+                  Lihat
+                </Link>
+              </div>
             </div>
           ))}
         </div>
