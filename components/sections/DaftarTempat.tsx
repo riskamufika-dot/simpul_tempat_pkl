@@ -1,36 +1,123 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 interface Props {
   kata: string;
   onKata: (v: string) => void;
   onCari: () => void;
+  gambar?: string[]; // foto latar dari Strapi
 }
 
-export default function HeaderDaftarTempat({ kata, onKata, onCari }: Props) {
-  return (
-    <div className="bg-white py-12 px-6 text-center">
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
-        Cari &amp; Bandingkan Tempat PKL{" "}
-        <span className="text-blue-600 block">Sesuai Kompetensi Jurusanmu</span>
-      </h1>
-      <p className="text-gray-600 text-sm max-w-2xl mx-auto mt-3">
-        Dapatkan informasi transparan mengenai jobdesk harian, besaran uang saku, sisa kuota, serta ulasan nyata kakak kelas terdahulu.
-      </p>
+export default function HeaderDaftarTempat({ kata, onKata, onCari, gambar = [] }: Props) {
+  const [aktif, setAktif] = useState(0);
+  const jumlah = gambar.length;
+  const idx = jumlah ? aktif % jumlah : 0;
 
-      <div className="mt-6 max-w-xl mx-auto flex gap-2">
-        <input
-          type="text"
-          value={kata}
-          onChange={(e) => onKata(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onCari()}
-          placeholder="Cari nama PT, jurusan, dll..."
-          className="w-full px-4 py-2.5 border rounded-full text-sm bg-gray-50 focus:outline-none"
-        />
-        <button
-          onClick={onCari}
-          className="bg-blue-900 text-white px-6 py-2.5 rounded-full text-sm font-medium"
-        >
-          Cari
-        </button>
+  // ganti foto otomatis tiap 5 detik
+  useEffect(() => {
+    if (jumlah < 2) return;
+    const t = setInterval(() => setAktif((i) => (i + 1) % jumlah), 5000);
+    return () => clearInterval(t);
+  }, [jumlah]);
+
+  const sebelumnya = () => setAktif((idx - 1 + jumlah) % jumlah);
+  const berikutnya = () => setAktif((idx + 1) % jumlah);
+
+  return (
+    <section className="w-full bg-white">
+  <div className="relative flex min-h-[300px] w-full items-center overflow-hidden bg-[#101d42] sm:min-h-[340px] lg:min-h-[380px]">
+        {/* Foto latar dari database */}
+        {gambar.map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={src + i}
+            src={src}
+            alt=""
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+              i === idx ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
+
+        {/* Lapisan gelap supaya teks terbaca */}
+        <div className="absolute inset-0 bg-linear-to-r from-[#101d42]/95 via-[#101d42]/70 to-[#101d42]/20" />
+
+        {/* Isi, rata kiri */}
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-8 sm:px-10 lg:px-16 xl:px-24">
+         <h1 className="max-w-3xl text-2xl font-extrabold leading-tight text-white sm:text-3xl lg:text-4xl">
+            Cari &amp; Bandingkan Tempat PKL{" "}
+            <span className="block text-blue-400">Sesuai Kompetensi Jurusanmu</span>
+          </h1>
+
+          <p className="mt-3 max-w-xl text-xs text-gray-200 sm:text-sm">
+            Dapatkan informasi transparan mengenai jobdesk harian, besaran uang saku,
+            sisa kuota, serta ulasan nyata kakak kelas terdahulu.
+          </p>
+
+          <div className="mt-6 flex w-full max-w-xl gap-2">
+            <div className="relative flex-1">
+              <svg
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+              </svg>
+              <input
+                type="text"
+                value={kata}
+                onChange={(e) => onKata(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onCari()}
+                placeholder="Cari nama tempat PKL..."
+                className="w-full rounded-full bg-white py-3 pl-11 pr-4 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <button
+              onClick={onCari}
+              className="rounded-full bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
+              Cari
+            </button>
+          </div>
+        </div>
+
+        {/* Panah dan titik, hanya muncul kalau foto lebih dari 1 */}
+        {jumlah > 1 && (
+          <>
+            <button
+              onClick={sebelumnya}
+              aria-label="Foto sebelumnya"
+              className="absolute left-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white"
+            >
+              ‹
+            </button>
+            <button
+              onClick={berikutnya}
+              aria-label="Foto berikutnya"
+              className="absolute right-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white"
+            >
+              ›
+            </button>
+
+            <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+              {gambar.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setAktif(i)}
+                  aria-label={`Foto ${i + 1}`}
+                  className={`h-2 rounded-full transition-all ${
+                    i === idx ? "w-5 bg-white" : "w-2 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </section>
   );
 }

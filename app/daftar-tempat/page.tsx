@@ -93,6 +93,16 @@ function DaftarTempatContent() {
     [data]
   );
 
+  // Foto hero diambil dari data Strapi (maksimal 5)
+const gambarHero = useMemo(
+  () =>
+    data
+      .map((d) => d.gambar)
+      .filter((g): g is string => typeof g === "string" && g !== "")
+      .slice(0, 5),
+  [data]
+);
+
   // Filter pencarian & kategori
   const tampil = useMemo(() => {
     const q = kataAktif.toLowerCase();
@@ -100,11 +110,11 @@ function DaftarTempatContent() {
 
     return data.filter((d) => {
       const cocokKata =
-        !q ||
-        d.nama.toLowerCase().includes(q) ||
-        d.jurusan.toLowerCase().includes(q) ||
-        d.role.some((r) => r.toLowerCase().includes(q));
-
+  !q ||
+  d.nama
+    .toLowerCase()
+    .split(/\s+/)
+    .some((kata) => kata.replace(/[()]/g, "").startsWith(q));
       const cocokBidang = !bidang || d.role.includes(bidang);
 
       // Pencocokan fleksibel agar cocok dengan nama atau singkatan jurusan
@@ -132,14 +142,19 @@ function DaftarTempatContent() {
         onOpenCompare={() => setIsCompareOpen(true)}
       />
 
-      <HeaderDaftarTempat
-        kata={kata}
-        onKata={setKata}
-        onCari={() => setKataAktif(kata)}
-      />
+     <HeaderDaftarTempat
+  kata={kata}
+  onKata={(v) => {
+    setKata(v);
+    setKataAktif(v);
+  }}
+  onCari={() => setKataAktif(kata)}
+/>
 
-      <div className="bg-blue-950 px-6 py-12">
-        <div className="mx-auto max-w-4xl space-y-8">
+
+     
+<div className="bg-blue-950 px-5 py-10 sm:px-10 lg:px-16 xl:px-24 lg:py-12">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
           <FilterTempat
             bidang={bidang}
             jurusan={jurusan}
@@ -151,9 +166,9 @@ function DaftarTempatContent() {
 
           {error && <p className="text-center text-red-300">{error}</p>}
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <LoadingKartu key={i} />)
+          <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+          {loading
+              ? Array.from({ length: 6 }).map((_, i) => <LoadingKartu key={i} />)
               : tampil.map((t) => (
                   <KartuTempatPKL
                     key={t.id}
