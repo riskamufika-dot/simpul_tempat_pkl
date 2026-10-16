@@ -19,6 +19,13 @@ import {
 } from "@/lib/strapi";
 import { TempatPKL } from "@/types";
 
+/* ---------- Helper ---------- */
+
+// "Pemasaran (PM)" -> "pemasaran"  (untuk membandingkan jurusan)
+const normalJurusan = (j: string) =>
+  (j || "").replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toCompanyDetail(t: any): CompanyDetail {
   return {
     id: t.id,
@@ -49,6 +56,8 @@ function toCompanyDetail(t: any): CompanyDetail {
   };
 }
 
+/* ---------- Halaman ---------- */
+
 function DaftarTempatContent() {
   const searchParams = useSearchParams();
   const queryJurusan = searchParams.get("jurusan") || "";
@@ -60,7 +69,6 @@ function DaftarTempatContent() {
   const [masterJurusan, setMasterJurusan] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Pencarian real-time langsung menggunakan `kata`
   const [kata, setKata] = useState(querySearch);
   const [bidang, setBidang] = useState("");
   const [jurusan, setJurusan] = useState(queryJurusan);
@@ -68,38 +76,53 @@ function DaftarTempatContent() {
   const [detailItem, setDetailItem] = useState<CompanyDetail | null>(null);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
-  // Sinkronkan state saat URL query berubah
+  // Sinkronkan filter saat query URL berubah
   useEffect(() => {
     if (queryJurusan) setJurusan(queryJurusan);
     if (querySearch) setKata(querySearch);
   }, [queryJurusan, querySearch]);
 
+  // Ambil semua data dari Strapi
   useEffect(() => {
     async function loadData() {
       try {
-        const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
-          getTempatPKL(),
-          getHeroSliders(),
-          getBusinessFields(),
-          getMajors(),
-        ]);
+        const [resCompanies, resSliders, resBidang, resMajors] =
+          await Promise.all([
+            getTempatPKL(),
+            getHeroSliders(),
+            getBusinessFields(),
+            getMajors(),
+          ]);
 
         setData(resCompanies);
 
-        const listBidang = (resBidang || [])
-          .map((b: any) => b.name || b.title || "")
-          .filter(Boolean);
-        setMasterBidang(listBidang);
+        // Master bidang dari Strapi
+        setMasterBidang(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (resBidang || []).map((b: any) => b.name || b.title || "").filter(Boolean)
+        );
 
-        const listJurusan = (resMajors || [])
-          .map((m: any) => m.name || m.title || "")
-          .filter(Boolean);
-        setMasterJurusan(listJurusan);
+        // Master jurusan dari Strapi, format "Nama (KODE)"
+        setMasterJurusan(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (resMajors || [])
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((m: any) => {
+              const nama = (m.name || m.title || "").trim();
+              const kode = m.code || m.abbreviation || "";
+              return kode ? `${nama} (${kode})` : nama;
+            })
+            .filter(Boolean)
+        );
 
-        const bannerUrls = (resSliders || [])
-          .map((s: any) => s.image?.url || s.image_url)
-          .filter(Boolean);
-        setHeroImages(bannerUrls);
+        // Foto hero
+        setHeroImages(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (resSliders || [])
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((s: any) => s.image?.url || s.image_url)
+            .filter(Boolean)
+        );
       } catch (err) {
         console.error("Gagal memuat data katalog:", err);
       } finally {
@@ -109,43 +132,41 @@ function DaftarTempatContent() {
     loadData();
   }, []);
 
+  // Dropdown Bidang: master Strapi + role yang ada di data
   const daftarBidang = useMemo(() => {
     const s = new Set<string>(masterBidang);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.forEach((d: any) => {
-      if (d.bidang && d.bidang.trim() !== "") {
-        s.add(d.bidang);
-      }
+      if (d.bidang && d.bidang.trim() !== "") s.add(d.bidang);
       if (Array.isArray(d.role)) {
         d.role.forEach((r: string) => {
           if (r && r !== "Umum") s.add(r);
         });
       }
     });
-    return Array.from(s).filter(Boolean);
+    return Array.from(s).filter(Boolean).sort();
   }, [data, masterBidang]);
 
-  const daftarJurusan = useMemo(() => {
-    const s = new Set<string>(masterJurusan);
-    data.forEach((d: any) => {
-      if (d.jurusan && d.jurusan.trim() !== "") {
-        s.add(d.jurusan);
-      }
-    });
-    return Array.from(s).filter(Boolean);
-  }, [data, masterJurusan]);
+  // Dropdown Jurusan: HANYA dari tabel Major di Strapi
+  const daftarJurusan = useMemo(
+    () => [...masterJurusan].sort(),
+    [masterJurusan]
+  );
 
-  // Pencarian instan (langsung merespons saat ketik / hapus karakter)
+  // Filter: pencarian + bidang + jurusan
   const hasilFilter = useMemo(() => {
-    const searchLower = kata.trim().toLowerCase();
+    const q = kata.trim().toLowerCase();
+    const jFilter = normalJurusan(jurusan);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.filter((t: any) => {
-      const matchKata = searchLower
-        ? (t.nama && t.nama.toLowerCase().includes(searchLower)) ||
-          (t.deskripsi && t.deskripsi.toLowerCase().includes(searchLower)) ||
-          (t.jurusan && t.jurusan.toLowerCase().includes(searchLower)) ||
-          (t.alamat && t.alamat.toLowerCase().includes(searchLower)) ||
+      const matchKata = q
+        ? (t.nama && t.nama.toLowerCase().includes(q)) ||
+          (t.deskripsi && t.deskripsi.toLowerCase().includes(q)) ||
+          (t.jurusan && t.jurusan.toLowerCase().includes(q)) ||
+          (t.alamat && t.alamat.toLowerCase().includes(q)) ||
           (Array.isArray(t.role) &&
-            t.role.some((r: string) => r.toLowerCase().includes(searchLower)))
+            t.role.some((r: string) => r.toLowerCase().includes(q)))
         : true;
 
       const matchBidang = bidang
@@ -154,10 +175,9 @@ function DaftarTempatContent() {
             t.role.some((r: string) => r.toLowerCase() === bidang.toLowerCase()))
         : true;
 
-      const matchJurusan = jurusan
-        ? (t.jurusan && t.jurusan.toLowerCase().includes(jurusan.toLowerCase())) ||
-          (t.singkatanJurusan &&
-            t.singkatanJurusan.toLowerCase().includes(jurusan.toLowerCase()))
+      const matchJurusan = jFilter
+        ? normalJurusan(t.jurusan) === jFilter ||
+          (t.singkatanJurusan || "").toLowerCase() === jFilter
         : true;
 
       return matchKata && matchBidang && matchJurusan;
@@ -166,15 +186,14 @@ function DaftarTempatContent() {
 
   const toggleBandingkan = (tempat: TempatPKL) => {
     setTerpilih((prev) => {
-      const ada = prev.some((p) => p.id === tempat.id);
-      if (ada) return prev.filter((p) => p.id !== tempat.id);
+      if (prev.some((p) => p.id === tempat.id))
+        return prev.filter((p) => p.id !== tempat.id);
       if (prev.length >= 2) return [prev[1], tempat];
       return [...prev, tempat];
     });
   };
 
   return (
-    // Latar belakang bersih disesuaikan: bg-[#f8fafc] (slate terang)
     <main className="min-h-screen bg-[#f8fafc] text-slate-900">
       <Navbar
         compareCount={terpilih.length}
@@ -189,7 +208,7 @@ function DaftarTempatContent() {
       />
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Bar Filter */}
+        {/* Bar filter */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
           <FilterTempat
             bidang={bidang}
@@ -200,11 +219,12 @@ function DaftarTempatContent() {
             onJurusan={setJurusan}
           />
           <span className="text-xs font-medium text-slate-500">
-            Ditemukan <strong className="text-blue-900">{hasilFilter.length}</strong> tempat PKL
+            Ditemukan{" "}
+            <strong className="text-blue-900">{hasilFilter.length}</strong> tempat PKL
           </span>
         </div>
 
-        {/* Daftar Kartu */}
+        {/* Daftar kartu */}
         {loading ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -213,10 +233,12 @@ function DaftarTempatContent() {
           </div>
         ) : hasilFilter.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-14 text-center text-slate-500 shadow-sm">
-            Tidak ada tempat PKL yang cocok dengan kata kunci &quot;{kata}&quot;.
+            {kata
+              ? `Tempat PKL "${kata}" tidak ada di data kami.`
+              : "Tidak ada tempat PKL yang cocok dengan filter yang dipilih."}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {hasilFilter.map((item) => (
               <KartuTempatPKL
                 key={item.id}
@@ -256,7 +278,9 @@ function DaftarTempatContent() {
         onClose={() => setIsCompareOpen(false)}
         items={terpilih}
         onClear={() => setTerpilih([])}
-        onRemoveItem={(id) => setTerpilih((prev) => prev.filter((p) => p.id !== id))}
+        onRemoveItem={(id) =>
+          setTerpilih((prev) => prev.filter((p) => p.id !== id))
+        }
       />
     </main>
   );

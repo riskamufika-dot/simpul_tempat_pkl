@@ -149,7 +149,6 @@ export default function FeaturesSection() {
       </section>
 
       {/* Modal Components */}
-      <DetailModal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} />
       <CompareModal isOpen={isCompareOpen} onClose={() => setIsCompareOpen(false)} />
     </>
   );
