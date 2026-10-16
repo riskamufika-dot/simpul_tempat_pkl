@@ -10,7 +10,7 @@ import KartuTempatPKL from "@/components/catalog/KartuTempatPKL";
 import PlaceSkeleton from "@/components/catalog/LoadingKartu";
 import BarBandingkan from "@/components/catalog/BarBandingkan";
 import PopUpDetail, { CompanyDetail } from "@/components/modals/PopUpDetail";
-import PopUpBandingkan from "@/components/modals/PopUpBandingkan";
+import { useCompare } from "@/components/layout/DaftarPerbandingan";
 import {
   getTempatPKL,
   getHeroSliders,
@@ -21,7 +21,7 @@ import { TempatPKL } from "@/types";
 
 /* ---------- Helper ---------- */
 
-// "Pemasaran (PM)" -> "pemasaran"  (untuk membandingkan jurusan)
+// "Pemasaran (PM)" -> "pemasaran" (untuk membandingkan jurusan)
 const normalJurusan = (j: string) =>
   (j || "").replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
 
@@ -63,6 +63,9 @@ function DaftarTempatContent() {
   const queryJurusan = searchParams.get("jurusan") || "";
   const querySearch = searchParams.get("search") || "";
 
+  // Pilihan perbandingan dibagi ke seluruh halaman (dari DaftarPerbandingan)
+  const { terpilih, toggleBandingkan, hapus, openCompare } = useCompare();
+
   const [data, setData] = useState<TempatPKL[]>([]);
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [masterBidang, setMasterBidang] = useState<string[]>([]);
@@ -72,9 +75,7 @@ function DaftarTempatContent() {
   const [kata, setKata] = useState(querySearch);
   const [bidang, setBidang] = useState("");
   const [jurusan, setJurusan] = useState(queryJurusan);
-  const [terpilih, setTerpilih] = useState<TempatPKL[]>([]);
   const [detailItem, setDetailItem] = useState<CompanyDetail | null>(null);
-  const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   // Sinkronkan filter saat query URL berubah
   useEffect(() => {
@@ -96,7 +97,6 @@ function DaftarTempatContent() {
 
         setData(resCompanies);
 
-        // Master bidang dari Strapi
         setMasterBidang(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (resBidang || []).map((b: any) => b.name || b.title || "").filter(Boolean)
@@ -104,7 +104,6 @@ function DaftarTempatContent() {
 
         // Master jurusan dari Strapi, format "Nama (KODE)"
         setMasterJurusan(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (resMajors || [])
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map((m: any) => {
@@ -115,7 +114,6 @@ function DaftarTempatContent() {
             .filter(Boolean)
         );
 
-        // Foto hero
         setHeroImages(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (resSliders || [])
@@ -147,7 +145,7 @@ function DaftarTempatContent() {
     return Array.from(s).filter(Boolean).sort();
   }, [data, masterBidang]);
 
-  // Dropdown Jurusan: HANYA dari tabel Major di Strapi
+  // Dropdown Jurusan: hanya dari tabel Major di Strapi
   const daftarJurusan = useMemo(
     () => [...masterJurusan].sort(),
     [masterJurusan]
@@ -184,21 +182,9 @@ function DaftarTempatContent() {
     });
   }, [data, kata, bidang, jurusan]);
 
-  const toggleBandingkan = (tempat: TempatPKL) => {
-    setTerpilih((prev) => {
-      if (prev.some((p) => p.id === tempat.id))
-        return prev.filter((p) => p.id !== tempat.id);
-      if (prev.length >= 2) return [prev[1], tempat];
-      return [...prev, tempat];
-    });
-  };
-
   return (
     <main className="min-h-screen bg-[#f8fafc] text-slate-900">
-      <Navbar
-        compareCount={terpilih.length}
-        onOpenCompare={() => setIsCompareOpen(true)}
-      />
+      <Navbar />
 
       <HeaderDaftarTempat
         kata={kata}
@@ -256,8 +242,8 @@ function DaftarTempatContent() {
 
       <BarBandingkan
         terpilih={terpilih}
-        onHapus={(id) => setTerpilih((prev) => prev.filter((p) => p.id !== id))}
-        onBandingkan={() => setIsCompareOpen(true)}
+        onHapus={(id) => hapus(id)}
+        onBandingkan={openCompare}
       />
 
       <PopUpDetail
@@ -271,16 +257,6 @@ function DaftarTempatContent() {
           const raw = data.find((d) => d.id === c.id);
           if (raw) toggleBandingkan(raw);
         }}
-      />
-
-      <PopUpBandingkan
-        isOpen={isCompareOpen}
-        onClose={() => setIsCompareOpen(false)}
-        items={terpilih}
-        onClear={() => setTerpilih([])}
-        onRemoveItem={(id) =>
-          setTerpilih((prev) => prev.filter((p) => p.id !== id))
-        }
       />
     </main>
   );

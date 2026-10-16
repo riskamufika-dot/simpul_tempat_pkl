@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans, Merriweather } from 'next/font/google';
 import './globals.css';
+import { DaftarPerbandingan } from "@/components/layout/DaftarPerbandingan";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -27,7 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={`${plusJakartaSans.variable} ${merriweather.variable}`}>
-      <body className="font-sans bg-white text-gray-900 antialiased">{children}</body>
+      <body className="font-sans bg-white text-gray-900 antialiased">
+  <DaftarPerbandingan>{children}</DaftarPerbandingan>
+</body>
     </html>
   );
 }

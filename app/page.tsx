@@ -1,6 +1,3 @@
-'use client';
-
-import { useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import HeaderBeranda from '@/components/sections/Beranda';
@@ -8,14 +5,11 @@ import FiturUtama from '@/components/sections/FiturUtama';
 import LangkahPKL from '@/components/sections/Langkah';
 import KategoriJurusan from '@/components/sections/KategoriJurusan';
 import Testimonial from '@/components/sections/Testimonial';
-import PopUpBandingkan from '@/components/modals/PopUpBandingkan';
 
 export default function Home() {
-  const [isCompareOpen, setIsCompareOpen] = useState(false);
-
   return (
     <main className="min-h-screen bg-white">
-      <Navbar onOpenCompare={() => setIsCompareOpen(true)} />
+      <Navbar />
 
       <section id="beranda">
         <HeaderBeranda />
@@ -26,12 +20,6 @@ export default function Home() {
       </section>
 
       <Footer />
-
-      <PopUpBandingkan
-        isOpen={isCompareOpen}
-        onClose={() => setIsCompareOpen(false)}
-        items={[]}
-      />
     </main>
   );
 }

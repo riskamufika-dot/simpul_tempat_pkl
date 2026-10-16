@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useCompare } from '@/components/layout/DaftarPerbandingan';
 
 interface NavbarProps {
   compareCount?: number;
@@ -16,7 +17,11 @@ const menu = [
   { label: 'Tentang Kami', href: '/tentang-kami' },
 ];
 
-export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps) {
+// sesudah
+export default function Navbar(_props: NavbarProps) {
+  const { terpilih, openCompare } = useCompare();
+  const compareCount = terpilih.length;
+  const onOpenCompare = openCompare;
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -56,29 +61,29 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
 
   return (
     <header className="sticky top-0 z-50 bg-blue-950 text-white shadow-md">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20">
+      <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-2 px-4 py-2 sm:px-6 lg:h-20 lg:py-0">
         {/* Logo */}
-        <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 md:flex-none">
           <Image
             src="/logo TP.png"
             alt="Tempat PKL Logo"
             width={70}
             height={70}
-            className="h-10 w-auto shrink-0 object-contain sm:h-12 lg:h-14"
+            className="h-9 w-auto shrink-0 object-contain sm:h-12 lg:h-14"
           />
           <div className="flex min-w-0 flex-col items-start">
             <span className="text-lg font-bold tracking-tight text-white sm:text-xl">
               SIMPUL
             </span>
-            {/* Subjudul disembunyikan di layar kecil agar tidak sesak */}
-            <span className="hidden text-[10px] leading-tight text-blue-200 lg:block">
+            {/* Teks boleh turun baris di layar kecil, tidak dipotong */}
+            <span className="block text-[8px] leading-tight text-blue-200 sm:text-[9px] lg:text-[10px]">
               Sistem Informasi Magang &amp; Penempatan Lapangan
             </span>
           </div>
         </Link>
 
-        {/* Menu desktop / tablet besar */}
-        <nav className="hidden items-center gap-6 font-serif text-sm lg:gap-10 md:flex">
+        {/* Menu desktop / tablet */}
+        <nav className="hidden items-center gap-6 font-serif text-sm md:flex lg:gap-10">
           {menu.map((m) => (
             <Link
               key={m.href}
@@ -94,14 +99,13 @@ export default function Navbar({ compareCount = 0, onOpenCompare }: NavbarProps)
           ))}
         </nav>
 
-        {/* Kanan: tombol banding (desktop) + hamburger (mobile) */}
-        <div className="flex items-center gap-2">
+        {/* Kanan: tombol banding (desktop) + banding ringkas & hamburger (HP) */}
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <div className="hidden md:block">{tombolBanding}</div>
 
-          {/* Di HP, tombol banding versi ringkas tetap terlihat */}
           <button
             onClick={onOpenCompare}
-            className="flex items-center gap-1.5 rounded-full border border-white/80 px-3 py-1.5 text-xs md:hidden"
+            className="flex items-center gap-1.5 rounded-full border border-white/80 px-2.5 py-1.5 text-xs md:hidden"
             aria-label="Buka perbandingan"
           >
             ⚖️

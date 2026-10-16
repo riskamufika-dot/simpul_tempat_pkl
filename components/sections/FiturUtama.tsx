@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import DetailModal from "@/components/modals/PopUpDetail";
-import CompareModal from "@/components/modals/PopUpBandingkan";
+import { useCompare } from "@/components/layout/DaftarPerbandingan";
 
 interface FeatureItem {
   id: number;
@@ -11,13 +10,12 @@ interface FeatureItem {
   description: string;
   actionText: string;
   href?: string;
-  type: "link" | "modal-detail" | "modal-compare";
+  type: "link" | "modal-compare";
   icon: React.ReactNode;
 }
 
 export default function FeaturesSection() {
-  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
-  const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
+  const { openCompare } = useCompare();
 
   const features: FeatureItem[] = [
     {
@@ -38,7 +36,7 @@ export default function FeaturesSection() {
       title: "Filter Jurusan untuk menyaring pilihan sesuai Jurusanmu",
       description: "Pilih Jurusan RPL, MPLB dan Lainnya",
       actionText: "Filter",
-      href: "/daftar-tempat?filter=jurusan",
+      href: "/daftar-tempat",
       type: "link",
       icon: (
         <svg className="w-8 h-8 text-[#182752]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +49,8 @@ export default function FeaturesSection() {
       title: "Detail lokasi lengkap dengan alamat dan peta",
       description: "Lihat lokasi tempat PKL secara jelas dan akurat",
       actionText: "Lokasi",
-      type: "modal-detail",
+      href: "/daftar-tempat",
+      type: "link",
       icon: (
         <svg className="w-8 h-8 text-[#182752]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -64,8 +63,7 @@ export default function FeaturesSection() {
       title: "Perbandingan tempat untuk menimbang pilihan terbaik",
       description: "Bandingkan beberapa tempat PKL dalam satu tampilan",
       actionText: "Bandingkan",
-      href: "/perbandingan",
-      type: "link",
+      type: "modal-compare",
       icon: (
         <svg className="w-8 h-8 text-[#182752]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
@@ -74,82 +72,64 @@ export default function FeaturesSection() {
     },
   ];
 
+  const cardClasses =
+    "group bg-[#eaedf2] hover:bg-white text-[#182752] rounded-2xl p-7 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 min-h-[320px] text-left";
+
   return (
-    <>
-      <section className="bg-[#182752] py-20 px-6 sm:px-10 lg:px-16 text-white w-full">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-              Semua yang Anda butuhkan
-            </h2>
-            <p className="text-gray-300 text-sm sm:text-base font-normal">
-              Fitur utama untuk memudahkan pencarian tempat PKL Anda
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((item) => {
-              const cardInner = (
-                <>
-                  <div>
-                    <div className="mb-6">{item.icon}</div>
-                    <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                  <div className="mt-8 flex items-center gap-2 font-semibold text-sm text-[#182752] group-hover:gap-3 transition-all duration-200">
-                    <span>{item.actionText}</span>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </>
-              );
-
-              const cardClasses =
-                "group bg-[#eaedf2] hover:bg-white text-[#182752] rounded-2xl p-7 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 min-h-[320px] text-left";
-
-              if (item.type === "modal-detail") {
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setIsDetailOpen(true)}
-                    className={`${cardClasses} cursor-pointer`}
-                  >
-                    {cardInner}
-                  </button>
-                );
-              }
-
-              if (item.type === "modal-compare") {
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setIsCompareOpen(true)}
-                    className={`${cardClasses} cursor-pointer`}
-                  >
-                    {cardInner}
-                  </button>
-                );
-              }
-
-              return (
-                <Link key={item.id} href={item.href || "#"} className={cardClasses}>
-                  {cardInner}
-                </Link>
-              );
-            })}
-          </div>
+    <section className="bg-[#182752] py-20 px-6 sm:px-10 lg:px-16 text-white w-full">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
+            Semua yang Anda butuhkan
+          </h2>
+          <p className="text-gray-300 text-sm sm:text-base font-normal">
+            Fitur utama untuk memudahkan pencarian tempat PKL Anda
+          </p>
         </div>
-      </section>
 
-      {/* Modal Components */}
-      <CompareModal isOpen={isCompareOpen} onClose={() => setIsCompareOpen(false)} />
-    </>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((item) => {
+            const cardInner = (
+              <>
+                <div>
+                  <div className="mb-6">{item.icon}</div>
+                  <h3 className="text-xl sm:text-2xl font-bold leading-snug mb-3">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center gap-2 font-semibold text-sm text-[#182752] group-hover:gap-3 transition-all duration-200">
+                  <span>{item.actionText}</span>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </>
+            );
+
+            if (item.type === "modal-compare") {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={openCompare}
+                  className={`${cardClasses} cursor-pointer`}
+                >
+                  {cardInner}
+                </button>
+              );
+            }
+
+            return (
+              <Link key={item.id} href={item.href || "#"} className={cardClasses}>
+                {cardInner}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
