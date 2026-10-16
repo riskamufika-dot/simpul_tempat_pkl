@@ -84,14 +84,14 @@ export default function Footer() {
 
           {/* Social Icons Section */}
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:opacity-80 transition-opacity">
+          <a href="https://www.facebook.com/share/14uhVhxiUB1/" className="hover:opacity-80 transition-opacity">
             <Image src="/icons/facebook.png" alt="Facebook" width={20} height={20} />
           </a>
           <a href="https://www.instagram.com/smkn2sumedang.official?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
              className="hover:opacity-80 transition-opacity">
             <Image src="/icons/instagramm.png" alt="Instagram" width={20} height={20} />
           </a>
-          <a href="#" className="hover:opacity-80 transition-opacity">
+          <a href="https://youtube.com/@smkn2sumedang?si=-4xkE4VVyvYL-yz2" className="hover:opacity-80 transition-opacity">
             <Image src="/icons/youtube.png" alt="Youtube" width={20} height={20} />
           </a>
         </div>

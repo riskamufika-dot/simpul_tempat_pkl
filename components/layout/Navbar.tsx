@@ -52,7 +52,14 @@ export default function Navbar(_props: NavbarProps) {
       }}
       className="flex items-center gap-2 rounded-full border border-white/80 px-3 py-2 font-serif text-sm text-white shadow-sm transition hover:bg-white/10 sm:gap-2.5 sm:px-4"
     >
-      <span>⚖️ Banding</span>
+      <div className="flex items-center gap-1.5">
+      <img 
+        src="/icons/banding.png" 
+        alt="Bandingkan" 
+        className="h-4 w-4 object-contain" 
+      />
+      <span> Banding</span>
+      </div>
       <span className="rounded-full border border-white/80 px-2 py-0.5 text-[11px]">
         {compareCount}/2
       </span>
