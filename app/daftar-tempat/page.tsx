@@ -7,27 +7,34 @@ import Footer from "@/components/layout/Footer";
 import HeaderDaftarTempat from "@/components/sections/DaftarTempat";
 import FilterTempat from "@/components/catalog/FilterTempat";
 import KartuTempatPKL from "@/components/catalog/KartuTempatPKL";
-import LoadingKartu from "@/components/catalog/LoadingKartu";
+import PlaceSkeleton from "@/components/catalog/LoadingKartu";
 import BarBandingkan from "@/components/catalog/BarBandingkan";
-import PopUpBandingkan from "@/components/modals/PopUpBandingkan";
-import { getTempatPKL } from "@/lib/strapi";
-import { TempatPKL } from "@/types";
 import PopUpDetail, { CompanyDetail } from "@/components/modals/PopUpDetail";
+import PopUpBandingkan from "@/components/modals/PopUpBandingkan";
+import {
+  getTempatPKL,
+  getHeroSliders,
+  getBusinessFields,
+  getMajors,
+} from "@/lib/strapi";
+import { TempatPKL } from "@/types";
 
-function toCompanyDetail(t: TempatPKL): CompanyDetail {
+function toCompanyDetail(t: any): CompanyDetail {
   return {
     id: t.id,
+    documentId: t.documentId,
     name: t.nama,
     category: t.jurusan,
     address: t.jarak ? `${t.alamat} (${t.jarak})` : t.alamat,
     mapsUrl: t.linkMaps ?? undefined,
     imageSrc: t.gambar ?? "/placeholder.png",
+    images: t.images && t.images.length > 0 ? t.images : [t.gambar],
     workHours: {
-      shift1: t.jamKerja[0] ?? "-",
-      shift2: t.jamKerja[1],
+      shift1: t.jamKerja?.[0] ?? "-",
+      shift2: t.jamKerja?.[1],
     },
     quota: t.kuota,
-    roles: t.role,
+    roles: t.detailedRoles && t.detailedRoles.length > 0 ? t.detailedRoles : t.role,
     tasks: t.tugas,
     requirements: t.syaratBerkas,
     facilities: t.fasilitas,
@@ -38,123 +45,152 @@ function toCompanyDetail(t: TempatPKL): CompanyDetail {
           feedback: t.testimoni.isi,
         }
       : undefined,
+    contacts: t.contacts ?? undefined,
   };
 }
 
 function DaftarTempatContent() {
   const searchParams = useSearchParams();
-  const queryJurusan = searchParams.get("jurusan");
+  const queryJurusan = searchParams.get("jurusan") || "";
+  const querySearch = searchParams.get("search") || "";
 
   const [data, setData] = useState<TempatPKL[]>([]);
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [masterBidang, setMasterBidang] = useState<string[]>([]);
+  const [masterJurusan, setMasterJurusan] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const [kata, setKata] = useState("");
-  const [kataAktif, setKataAktif] = useState("");
+  // Pencarian real-time langsung menggunakan `kata`
+  const [kata, setKata] = useState(querySearch);
   const [bidang, setBidang] = useState("");
-  const [jurusan, setJurusan] = useState(queryJurusan || "");
-
-  const [detail, setDetail] = useState<TempatPKL | null>(null);
+  const [jurusan, setJurusan] = useState(queryJurusan);
   const [terpilih, setTerpilih] = useState<TempatPKL[]>([]);
+  const [detailItem, setDetailItem] = useState<CompanyDetail | null>(null);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
-  // Ambil seluruh data langsung dari Strapi (hingga 100 data)
+  // Sinkronkan state saat URL query berubah
+  useEffect(() => {
+    if (queryJurusan) setJurusan(queryJurusan);
+    if (querySearch) setKata(querySearch);
+  }, [queryJurusan, querySearch]);
+
   useEffect(() => {
     async function loadData() {
       try {
-        setLoading(true);
-        setError(null);
-        const res = await getTempatPKL();
-        setData(res);
-      } catch (err: any) {
-        setError(err.message || "Gagal memuat data tempat PKL.");
+        const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
+          getTempatPKL(),
+          getHeroSliders(),
+          getBusinessFields(),
+          getMajors(),
+        ]);
+
+        setData(resCompanies);
+
+        const listBidang = (resBidang || [])
+          .map((b: any) => b.name || b.title || "")
+          .filter(Boolean);
+        setMasterBidang(listBidang);
+
+        const listJurusan = (resMajors || [])
+          .map((m: any) => m.name || m.title || "")
+          .filter(Boolean);
+        setMasterJurusan(listJurusan);
+
+        const bannerUrls = (resSliders || [])
+          .map((s: any) => s.image?.url || s.image_url)
+          .filter(Boolean);
+        setHeroImages(bannerUrls);
+      } catch (err) {
+        console.error("Gagal memuat data katalog:", err);
       } finally {
         setLoading(false);
       }
     }
-
     loadData();
   }, []);
 
-  // Update filter jurusan jika query param di URL berubah
-  useEffect(() => {
-    if (queryJurusan) {
-      setJurusan(queryJurusan);
-    }
-  }, [queryJurusan]);
-
-  const daftarBidang = useMemo(
-    () => [...new Set(data.flatMap((d) => d.role))].sort(),
-    [data]
-  );
-  
-  const daftarJurusan = useMemo(
-    () => [...new Set(data.map((d) => d.jurusan))].sort(),
-    [data]
-  );
-
-  // Foto hero diambil dari data Strapi (maksimal 5)
-const gambarHero = useMemo(
-  () =>
-    data
-      .map((d) => d.gambar)
-      .filter((g): g is string => typeof g === "string" && g !== "")
-      .slice(0, 5),
-  [data]
-);
-
-  // Filter pencarian & kategori
-  const tampil = useMemo(() => {
-    const q = kataAktif.toLowerCase();
-    const jFilter = jurusan.toLowerCase();
-
-    return data.filter((d) => {
-      const cocokKata =
-  !q ||
-  d.nama
-    .toLowerCase()
-    .split(/\s+/)
-    .some((kata) => kata.replace(/[()]/g, "").startsWith(q));
-      const cocokBidang = !bidang || d.role.includes(bidang);
-
-      // Pencocokan fleksibel agar cocok dengan nama atau singkatan jurusan
-      const cocokJurusan =
-        !jurusan ||
-        d.jurusan.toLowerCase().includes(jFilter) ||
-        jFilter.includes(d.jurusan.toLowerCase());
-
-      return cocokKata && cocokBidang && cocokJurusan;
+  const daftarBidang = useMemo(() => {
+    const s = new Set<string>(masterBidang);
+    data.forEach((d: any) => {
+      if (d.bidang && d.bidang.trim() !== "") {
+        s.add(d.bidang);
+      }
+      if (Array.isArray(d.role)) {
+        d.role.forEach((r: string) => {
+          if (r && r !== "Umum") s.add(r);
+        });
+      }
     });
-  }, [data, kataAktif, bidang, jurusan]);
+    return Array.from(s).filter(Boolean);
+  }, [data, masterBidang]);
 
-  const toggleBandingkan = (t: TempatPKL) => {
+  const daftarJurusan = useMemo(() => {
+    const s = new Set<string>(masterJurusan);
+    data.forEach((d: any) => {
+      if (d.jurusan && d.jurusan.trim() !== "") {
+        s.add(d.jurusan);
+      }
+    });
+    return Array.from(s).filter(Boolean);
+  }, [data, masterJurusan]);
+
+  // Pencarian instan (langsung merespons saat ketik / hapus karakter)
+  const hasilFilter = useMemo(() => {
+    const searchLower = kata.trim().toLowerCase();
+
+    return data.filter((t: any) => {
+      const matchKata = searchLower
+        ? (t.nama && t.nama.toLowerCase().includes(searchLower)) ||
+          (t.deskripsi && t.deskripsi.toLowerCase().includes(searchLower)) ||
+          (t.jurusan && t.jurusan.toLowerCase().includes(searchLower)) ||
+          (t.alamat && t.alamat.toLowerCase().includes(searchLower)) ||
+          (Array.isArray(t.role) &&
+            t.role.some((r: string) => r.toLowerCase().includes(searchLower)))
+        : true;
+
+      const matchBidang = bidang
+        ? (t.bidang && t.bidang.toLowerCase() === bidang.toLowerCase()) ||
+          (Array.isArray(t.role) &&
+            t.role.some((r: string) => r.toLowerCase() === bidang.toLowerCase()))
+        : true;
+
+      const matchJurusan = jurusan
+        ? (t.jurusan && t.jurusan.toLowerCase().includes(jurusan.toLowerCase())) ||
+          (t.singkatanJurusan &&
+            t.singkatanJurusan.toLowerCase().includes(jurusan.toLowerCase()))
+        : true;
+
+      return matchKata && matchBidang && matchJurusan;
+    });
+  }, [data, kata, bidang, jurusan]);
+
+  const toggleBandingkan = (tempat: TempatPKL) => {
     setTerpilih((prev) => {
-      if (prev.some((p) => p.id === t.id)) return prev.filter((p) => p.id !== t.id);
-      if (prev.length >= 2) return [prev[1], t];
-      return [...prev, t];
+      const ada = prev.some((p) => p.id === tempat.id);
+      if (ada) return prev.filter((p) => p.id !== tempat.id);
+      if (prev.length >= 2) return [prev[1], tempat];
+      return [...prev, tempat];
     });
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    // Latar belakang bersih disesuaikan: bg-[#f8fafc] (slate terang)
+    <main className="min-h-screen bg-[#f8fafc] text-slate-900">
       <Navbar
         compareCount={terpilih.length}
         onOpenCompare={() => setIsCompareOpen(true)}
       />
 
-     <HeaderDaftarTempat
-  kata={kata}
-  onKata={(v) => {
-    setKata(v);
-    setKataAktif(v);
-  }}
-  onCari={() => setKataAktif(kata)}
-/>
+      <HeaderDaftarTempat
+        kata={kata}
+        onKata={setKata}
+        onCari={() => {}}
+        gambar={heroImages}
+      />
 
-
-     
-<div className="bg-blue-950 px-5 py-10 sm:px-10 lg:px-16 xl:px-24 lg:py-12">
-        <div className="mx-auto w-full max-w-7xl space-y-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* Bar Filter */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
           <FilterTempat
             bidang={bidang}
             jurusan={jurusan}
@@ -163,75 +199,72 @@ const gambarHero = useMemo(
             onBidang={setBidang}
             onJurusan={setJurusan}
           />
-
-          {error && <p className="text-center text-red-300">{error}</p>}
-
-          <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-          {loading
-              ? Array.from({ length: 6 }).map((_, i) => <LoadingKartu key={i} />)
-              : tampil.map((t) => (
-                  <KartuTempatPKL
-                    key={t.id}
-                    tempat={t}
-                    dipilih={terpilih.some((p) => p.id === t.id)}
-                    onDetail={setDetail}
-                    onBandingkan={toggleBandingkan}
-                  />
-                ))}
-          </div>
-
-          {!loading && !error && tampil.length === 0 && (
-            <p className="text-center text-white/70 py-10">
-              Tidak ada tempat PKL yang cocok dengan kriteria pencarian/jurusan ini.
-            </p>
-          )}
+          <span className="text-xs font-medium text-slate-500">
+            Ditemukan <strong className="text-blue-900">{hasilFilter.length}</strong> tempat PKL
+          </span>
         </div>
+
+        {/* Daftar Kartu */}
+        {loading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <PlaceSkeleton key={i} />
+            ))}
+          </div>
+        ) : hasilFilter.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-14 text-center text-slate-500 shadow-sm">
+            Tidak ada tempat PKL yang cocok dengan kata kunci &quot;{kata}&quot;.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {hasilFilter.map((item) => (
+              <KartuTempatPKL
+                key={item.id}
+                tempat={item}
+                dipilih={terpilih.some((p) => p.id === item.id)}
+                onDetail={(t) => setDetailItem(toCompanyDetail(t))}
+                onBandingkan={toggleBandingkan}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <Footer />
 
       <BarBandingkan
         terpilih={terpilih}
-        onHapus={(id) => setTerpilih((p) => p.filter((x) => x.id !== id))}
+        onHapus={(id) => setTerpilih((prev) => prev.filter((p) => p.id !== id))}
         onBandingkan={() => setIsCompareOpen(true)}
       />
 
-      {/* PopUp Detail */}
       <PopUpDetail
-        isOpen={detail !== null}
-        onClose={() => setDetail(null)}
-        company={detail ? toCompanyDetail(detail) : null}
-        isComparing={detail ? terpilih.some((p) => p.id === detail.id) : false}
-        onBandingkan={(comp: any) => {
-          const target = data.find((d) => d.id === comp.id);
-          if (target) {
-            toggleBandingkan(target);
-          }
+        isOpen={Boolean(detailItem)}
+        onClose={() => setDetailItem(null)}
+        company={detailItem}
+        isComparing={
+          detailItem ? terpilih.some((p) => p.id === detailItem.id) : false
+        }
+        onBandingkan={(c) => {
+          const raw = data.find((d) => d.id === c.id);
+          if (raw) toggleBandingkan(raw);
         }}
       />
 
-      {/* PopUp Bandingkan */}
       <PopUpBandingkan
         isOpen={isCompareOpen}
         onClose={() => setIsCompareOpen(false)}
         items={terpilih}
         onClear={() => setTerpilih([])}
-        onRemoveItem={(idHapus) => {
-          setTerpilih((prev) =>
-            prev.filter((item, idx) => {
-              const currentId = item.id !== undefined ? item.id : idx;
-              return String(currentId) !== String(idHapus);
-            })
-          );
-        }}
+        onRemoveItem={(id) => setTerpilih((prev) => prev.filter((p) => p.id !== id))}
       />
-
-      <Footer />
     </main>
   );
 }
 
 export default function DaftarTempatPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f8fafc]" />}>
       <DaftarTempatContent />
     </Suspense>
   );

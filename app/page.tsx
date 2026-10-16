@@ -1,19 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-
-// Layout
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-
-// Komponen Halaman Beranda
 import HeaderBeranda from '@/components/sections/Beranda';
 import FiturUtama from '@/components/sections/FiturUtama';
 import LangkahPKL from '@/components/sections/Langkah';
 import KategoriJurusan from '@/components/sections/KategoriJurusan';
 import Testimonial from '@/components/sections/Testimonial';
-
-// Modals
 import PopUpBandingkan from '@/components/modals/PopUpBandingkan';
 
 export default function Home() {

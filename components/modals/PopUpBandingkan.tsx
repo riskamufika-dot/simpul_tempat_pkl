@@ -24,6 +24,23 @@ export default function PopUpBandingkan({
 
   const formatPlace = (place: any, index: number) => {
     if (!place) return null;
+
+    const rawRoles =
+      place.roles ||
+      place.posisi ||
+      place.bidang ||
+      place.role ||
+      place.business_fields ||
+      ["Kasir", "Display Staff"];
+
+    const safeRoles = Array.isArray(rawRoles)
+      ? rawRoles.map((r) =>
+          typeof r === "string" ? r : r?.name || r?.role || r?.bidang || String(r)
+        )
+      : typeof rawRoles === "string" && rawRoles.trim() !== ""
+      ? rawRoles.split(",").map((s) => s.trim())
+      : ["Kasir", "Display Staff"];
+
     return {
       id: place.id !== undefined ? place.id : index,
       name: place.name || place.nama || "Nama Tempat",
@@ -51,12 +68,8 @@ export default function PopUpBandingkan({
         place.quotaNote ||
         place.quota ||
         place.kuota ||
-        "Terbatas, sesuai kebutuhan dan kebijakan perusahaan",
-      roles:
-        place.roles ||
-        place.posisi ||
-        place.bidang ||
-        ["Pilih Bidang/Role", "Kasir", "Display Staff"],
+        "Tersedia",
+      roles: safeRoles,
       tasks:
         place.tasks ||
         place.tugas ||
@@ -70,9 +83,7 @@ export default function PopUpBandingkan({
         place.fasilitas || [
           "Tempat pelaksanaan PKL",
           "Pembimbing selama kegiatan PKL",
-          "Pengalaman bekerja di lingkungan pusat perbelanjaan",
-          "Pengalaman dalam pelayanan pelanggan dan operasional toko",
-          "Pengalaman dalam penataan produk dan proses transaksi",
+          "Pengalaman bekerja di lingkungan kantor",
         ],
       requirements:
         place.requirements ||
@@ -81,8 +92,6 @@ export default function PopUpBandingkan({
           "Surat pengantar/permohonan PKL dari sekolah",
           "Surat tugas atau penempatan PKL",
           "Fotokopi kartu pelajar",
-          "Formulir atau dokumen administrasi PKL dari sekolah",
-          "Dokumen tambahan sesuai ketentuan perusahaan",
         ],
     };
   };
@@ -134,7 +143,8 @@ export default function PopUpBandingkan({
         className="bg-white rounded-3xl max-w-7xl w-full p-6 sm:p-10 lg:p-12 shadow-2xl relative my-auto max-h-[96vh] overflow-y-auto text-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-4 mb-8">
+        {/* Header */}
+        <div className="flex items-start gap-4 mb-6">
           <div className="w-11 h-11 rounded-xl bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 mt-0.5">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
@@ -150,73 +160,111 @@ export default function PopUpBandingkan({
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-3 lg:gap-4 items-start text-sm">
-          <div className="hidden lg:flex lg:col-span-2 flex-col gap-6 text-gray-600 font-semibold pt-4 pr-1">
-            <div className="h-48 flex items-center">Profil Perusahaan:</div>
-            <div className="min-h-[58px] flex items-center">Lokasi (Jarak):</div>
-            <div className="min-h-[48px] flex items-center">Jam Kerja:</div>
-            <div className="min-h-[42px] flex items-center">Kuota Siswa:</div>
-            <div className="min-h-[46px] flex items-center">Bidang/Role:</div>
-            <div className="min-h-[115px] flex items-center">Hal yang Perlu Dikerjakan:</div>
-            <div className="min-h-[155px] flex items-center">Fasilitas:</div>
-            <div className="min-h-[165px] flex items-center">Syarat Berkas:</div>
-          </div>
-
-          <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
-            {comparedList.map((place: any, idx: number) => (
-              <div
-                key={place.id}
-                className="border border-gray-200/90 rounded-3xl p-5 sm:p-7 bg-white shadow-sm flex flex-col gap-6 relative"
-              >
-                <div className="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100">
-                  <Image
-                    src={place.image}
-                    alt={place.name}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                  <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onRemoveItem) {
-      onRemoveItem(place.id);
-    }
-  }}
-  className="absolute top-2.5 right-2.5 text-white hover:text-red-500 transition-colors cursor-pointer z-30 flex items-center justify-center p-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-  title="Hapus dari perbandingan"
-  aria-label="Hapus dari perbandingan"
->
-  <svg className="w-6 h-6 stroke-current" fill="none" strokeWidth="2.8" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-</button>
-                </div>
-
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
+        {/* Tabel Komparasi Bersih Tanpa Garis-Garis */}
+        <div className="w-full text-sm">
+          {/* BARIS 1: Profil & Gambar */}
+          <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 pt-2">
+              Profil Perusahaan:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="space-y-3">
+                  <div className="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden bg-gray-100">
+                    <Image
+                      src={place.image}
+                      alt={place.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onRemoveItem) onRemoveItem(place.id);
+                      }}
+                      className="absolute top-2.5 right-2.5 text-white hover:text-red-500 transition-colors cursor-pointer z-30 flex items-center justify-center p-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                      title="Hapus dari perbandingan"
+                    >
+                      <svg className="w-6 h-6 stroke-current" fill="none" strokeWidth="2.8" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-snug">
                     {place.name}
                   </h3>
                 </div>
+              ))}
+              {comparedList.length === 1 && (
+                <div
+                  onClick={onClose}
+                  className="border-2 border-dashed border-blue-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-2 cursor-pointer bg-blue-50/30 hover:bg-blue-50/60 transition"
+                >
+                  <span className="text-blue-600 font-bold text-xl">+</span>
+                  <span className="text-xs text-gray-500">Pilih 1 tempat lagi dari daftar</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-                <div className="min-h-[58px] flex items-start gap-2 text-xs sm:text-sm text-gray-800 leading-relaxed">
+          {/* BARIS 2: Lokasi / Alamat */}
+          <div className="grid grid-cols-12 gap-4 py-3.5 px-3 rounded-2xl items-start bg-slate-50/70">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Lokasi (Jarak):
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="flex items-start gap-2 text-xs sm:text-sm text-gray-800 leading-relaxed">
                   <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   <span>{place.address}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[48px] text-xs sm:text-sm text-gray-800 leading-relaxed space-y-0.5">
+          {/* BARIS 3: Jam Kerja */}
+          <div className="grid grid-cols-12 gap-4 py-3.5 px-3 rounded-2xl items-start">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Jam Kerja:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="text-xs sm:text-sm text-gray-800 leading-relaxed space-y-0.5">
                   <p>{place.shift1}</p>
                   <p>{place.shift2}</p>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[42px] text-xs sm:text-sm text-gray-800 leading-relaxed flex items-center">
-                  {place.quota}
+          {/* BARIS 4: Kuota Siswa */}
+          <div className="grid grid-cols-12 gap-4 py-3.5 px-3 rounded-2xl items-center bg-slate-50/70">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Kuota Siswa:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="text-xs sm:text-sm text-gray-800 font-semibold">
+                  <span className="inline-block px-3 py-1 bg-blue-100/70 text-blue-700 rounded-lg text-xs">
+                    {place.quota}
+                  </span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[46px] relative">
+          {/* BARIS 5: Bidang / Role */}
+          <div className="grid grid-cols-12 gap-4 py-3.5 px-3 rounded-2xl items-center">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Bidang/Role:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any, idx: number) => (
+                <div key={place.id} className="relative">
                   <select
                     value={idx === 0 ? selectedRole1 : selectedRole2}
                     onChange={(e) =>
@@ -224,14 +272,15 @@ export default function PopUpBandingkan({
                         ? setSelectedRole1(e.target.value)
                         : setSelectedRole2(e.target.value)
                     }
-                    className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-medium rounded-full py-2.5 px-5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
+                    className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-medium rounded-full py-2 px-5 pr-10 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm"
                   >
                     <option value="">Pilih Bidang/Role</option>
-                    {place.roles.map((r: string, i: number) => (
-                      <option key={i} value={r}>
-                        {r}
-                      </option>
-                    ))}
+                    {Array.isArray(place.roles) &&
+                      place.roles.map((r: string, i: number) => (
+                        <option key={i} value={r}>
+                          {r}
+                        </option>
+                      ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#2563eb]">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,58 +288,70 @@ export default function PopUpBandingkan({
                     </svg>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[115px] text-xs sm:text-sm text-gray-800">
+          {/* BARIS 6: Hal yang Perlu Dikerjakan */}
+          <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start bg-slate-50/70">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Hal yang Perlu Dikerjakan:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="text-xs sm:text-sm text-gray-800">
                   <ol className="list-decimal list-outside pl-4 space-y-2 leading-relaxed">
-                    {place.tasks.map((task: string, i: number) => (
-                      <li key={i}>{task}</li>
-                    ))}
+                    {Array.isArray(place.tasks) &&
+                      place.tasks.map((task: string, i: number) => (
+                        <li key={i}>{task}</li>
+                      ))}
                   </ol>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[155px] text-xs sm:text-sm text-gray-800">
+          {/* BARIS 7: Fasilitas */}
+          <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Fasilitas:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="text-xs sm:text-sm text-gray-800">
                   <ol className="list-decimal list-outside pl-4 space-y-1.5 leading-relaxed">
-                    {place.facilities.map((fac: string, i: number) => (
-                      <li key={i}>{fac}</li>
-                    ))}
+                    {Array.isArray(place.facilities) &&
+                      place.facilities.map((fac: string, i: number) => (
+                        <li key={i}>{fac}</li>
+                      ))}
                   </ol>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <div className="min-h-[165px] text-xs sm:text-sm text-gray-800">
+          {/* BARIS 8: Syarat Berkas */}
+          <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start bg-slate-50/70">
+            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
+              Syarat Berkas:
+            </div>
+            <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              {comparedList.map((place: any) => (
+                <div key={place.id} className="text-xs sm:text-sm text-gray-800">
                   <ol className="list-decimal list-outside pl-4 space-y-1.5 leading-relaxed">
-                    {place.requirements.map((req: string, i: number) => (
-                      <li key={i}>{req}</li>
-                    ))}
+                    {Array.isArray(place.requirements) &&
+                      place.requirements.map((req: string, i: number) => (
+                        <li key={i}>{req}</li>
+                      ))}
                   </ol>
                 </div>
-              </div>
-            ))}
-
-            {comparedList.length === 1 && (
-              <div
-                onClick={onClose}
-                className="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-3xl p-8 bg-blue-50/40 hover:bg-blue-50/80 transition flex flex-col items-center justify-center text-center gap-4 cursor-pointer min-h-[500px]"
-              >
-                <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl font-bold shadow-sm">
-                  +
-                </div>
-                <div>
-                  <h4 className="text-lg font-bold text-gray-900">
-                    Tambah Tempat PKL Lain
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-[240px]">
-                    Klik di sini untuk kembali ke daftar kartu dan memilih 1 tempat lagi sebagai pembanding
-                  </p>
-                </div>
-                <span className="mt-2 inline-flex items-center text-xs font-semibold text-blue-600 underline">
-                  Kembali ke Daftar Tempat →
-                </span>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-10 mt-8 border-t border-gray-100">
+        {/* Footer Tombol */}
+        <div className="flex items-center justify-between pt-8 mt-4">
           <button
             type="button"
             onClick={onClear}

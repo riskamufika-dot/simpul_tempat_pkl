@@ -3,8 +3,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 
+const STRAPI_URL =
+  process.env.NEXT_PUBLIC_STRAPI_URL ?? "https://simpul-production.up.railway.app";
+
 export interface CompanyDetail {
   id: string | number;
+  documentId?: string;
   name: string;
   category: string;
   address: string;
@@ -27,6 +31,7 @@ export interface CompanyDetail {
   };
   contacts?: {
     telepon?: string;
+    phone?: string;
     whatsapp?: string;
     email?: string;
   };
@@ -40,6 +45,36 @@ export interface PopUpDetailProps {
   onBandingkan?: (company: CompanyDetail | any) => void;
 }
 
+// Helper pembersih format teks list (menghapus tanda petik, kurung siku, dan bullet berlebih)
+function cleanTaskList(rawTasks: any): string[] {
+  if (!rawTasks) return [];
+  const list = Array.isArray(rawTasks) ? rawTasks : [rawTasks];
+
+  return list
+    .flatMap((item) => {
+      if (typeof item === "string") {
+        const trimmed = item.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed;
+          } catch {}
+        }
+        return item.split(/\r?\n/);
+      }
+      return String(item);
+    })
+    .map((s: string) =>
+      s
+        .trim()
+        .replace(/^[-•*]\s*/, "")
+        .replace(/^\d+[\.\)]\s*/, "")
+        .replace(/^["'](.*)["']$/, "$1")
+        .trim()
+    )
+    .filter((s: string) => s.length > 0 && s !== "[" && s !== "]");
+}
+
 export default function PopUpDetail({
   isOpen,
   onClose,
@@ -47,54 +82,37 @@ export default function PopUpDetail({
   isComparing = false,
   onBandingkan,
 }: PopUpDetailProps) {
-  // State Slide
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Ref untuk Swipe / Drag Touch & Mouse
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
-  // State Role Aktif
   const [selectedRole, setSelectedRole] = useState<string>("");
-
-  // State Sub-modal (Review & Kontak)
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
-  // State Form Review
   const [namaReviewer, setNamaReviewer] = useState("");
   const [asalSekolah, setAsalSekolah] = useState("");
   const [jurusanReviewer, setJurusanReviewer] = useState("");
   const [pesanReview, setPesanReview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
-  // Susunan gambar slider
   const imageList = useMemo(() => {
     if (!company) return [];
     if (company.images && company.images.length > 0) return company.images;
-    if (company.imageSrc) {
-      return [
-        company.imageSrc,
-        "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=1000&q=80",
-        "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80",
-      ];
-    }
+    if (company.imageSrc) return [company.imageSrc];
     return ["/placeholder.png"];
   }, [company]);
 
-  // Auto-play Slide Foto: Berpindah otomatis setiap 3.5 detik (tidak terhenti oleh hover mouse)
   useEffect(() => {
     if (!isOpen || imageList.length <= 1) return;
-
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % imageList.length);
     }, 3500);
-
     return () => clearInterval(timer);
   }, [isOpen, imageList.length]);
 
-  // Logika Drag Mouse & Touch Geser Foto
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     touchStartX.current = clientX;
@@ -109,101 +127,84 @@ export default function PopUpDetail({
   const handleTouchEnd = () => {
     if (touchStartX.current === null || touchEndX.current === null) return;
     const distance = touchStartX.current - touchEndX.current;
-    const minSwipe = 25; // Sensitivitas geser ringan
-
-    if (distance > minSwipe) {
-      // Geser ke kiri -> gambar berikutnya
+    if (distance > 25) {
       setCurrentSlide((prev) => (prev + 1) % imageList.length);
-    } else if (distance < -minSwipe) {
-      // Geser ke kanan -> gambar sebelumnya
+    } else if (distance < -25) {
       setCurrentSlide((prev) => (prev - 1 + imageList.length) % imageList.length);
     } else if (Math.abs(distance) < 5) {
-      // Klik biasa di laptop/desktop -> langsung lanjut ke foto berikutnya
       setCurrentSlide((prev) => (prev + 1) % imageList.length);
     }
-
     touchStartX.current = null;
     touchEndX.current = null;
   };
 
-  // Normalisasi list role & tugas masing-masing role
+  // Normalisasi daftar role dan tugas
   const roleList: { role: string; tasks: string[] }[] = useMemo(() => {
     if (!company) return [];
+
     if (
       company.roles &&
       company.roles.length > 0 &&
       typeof company.roles[0] === "object"
     ) {
-      return company.roles as { role: string; tasks: string[] }[];
+      return (company.roles as { role: string; tasks: string[] }[]).map((r) => ({
+        role: r.role,
+        tasks: cleanTaskList(r.tasks),
+      }));
     }
-    return ((company.roles as string[]) || ["Kasir", "Display Staff"]).map((r) => {
-      const lower = r.toLowerCase();
-      let defaultTasks =
-        company.tasks && company.tasks.length > 0
-          ? company.tasks
-          : [
-              "Membantu proses operasional harian",
-              "Menata dan merapikan area kerja",
-              "Memberikan pelayanan kepada pelanggan sesuai arahan",
-            ];
 
-      if (lower.includes("kasir")) {
-        defaultTasks = [
-          "Membantu proses transaksi",
-          "Menata area kasir",
-          "Memberikan pelayanan kepada pelanggan sesuai arahan",
-        ];
-      } else if (lower.includes("display")) {
-        defaultTasks = [
-          "Menata dan merapikan produk",
-          "Memastikan produk tersusun sesuai kategori",
-          "Membantu mengisi kembali produk yang tersedia",
-        ];
-      }
-      return { role: r, tasks: defaultTasks };
-    });
+    const defaultRoleTasks = cleanTaskList(company.tasks);
+    return ((company.roles as string[]) || ["Staff PKL"]).map((r) => ({
+      role: r,
+      tasks: defaultRoleTasks,
+    }));
   }, [company]);
 
-  // Sinkronisasi saat modal dibuka
   useEffect(() => {
     if (company && roleList.length > 0) {
       setSelectedRole(roleList[0].role);
       setCurrentSlide(0);
       setReviewSuccess(false);
+      setReviewError(null);
     }
   }, [company, roleList]);
 
   if (!isOpen || !company) return null;
 
+  // Tugas yang sedang aktif mengikuti tombol role yang diklik
   const activeRoleData = roleList.find((r) => r.role === selectedRole);
-  const currentTasks = activeRoleData ? activeRoleData.tasks : company.tasks || [];
+  const currentTasks =
+    activeRoleData && activeRoleData.tasks.length > 0
+      ? activeRoleData.tasks
+      : cleanTaskList(company.tasks);
 
-  // Submit Review ke Strapi
+  const cleanedRequirements = cleanTaskList(company.requirements);
+  const cleanedFacilities = cleanTaskList(company.facilities);
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setReviewError(null);
 
     try {
       const payload = {
         data: {
-          nama: namaReviewer,
-          sekolah: asalSekolah,
-          jurusan: jurusanReviewer,
-          perusahaan: company.name,
-          perusahaanId: company.id,
-          komentar: pesanReview,
-          isApproved: false,
+          company: company.documentId || company.id,
+          full_name: namaReviewer,
+          school_name: asalSekolah,
+          major: jurusanReviewer,
+          review: pesanReview,
+          is_featured: false,
         },
       };
 
-      await fetch(
-        `${process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337"}/api/reviews`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      ).catch(() => {});
+      const res = await fetch(`${STRAPI_URL}/api/testimonials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal mengirim ulasan ke server.");
 
       setReviewSuccess(true);
       setTimeout(() => {
@@ -213,9 +214,9 @@ export default function PopUpDetail({
         setJurusanReviewer("");
         setPesanReview("");
         setReviewSuccess(false);
-      }, 1500);
-    } catch (err) {
-      console.error(err);
+      }, 1800);
+    } catch (err: any) {
+      setReviewError(err.message || "Terjadi kesalahan.");
     } finally {
       setIsSubmitting(false);
     }
@@ -230,17 +231,15 @@ export default function PopUpDetail({
         className="bg-white rounded-3xl max-w-4xl w-full p-4 sm:p-7 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto text-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Tombol Tutup Silang di Kanan Atas */}
         <button
           type="button"
           onClick={onClose}
           className="absolute top-4 right-4 z-20 text-gray-700 bg-white/90 hover:bg-white w-9 h-9 rounded-full flex items-center justify-center shadow-md transition text-lg cursor-pointer"
-          aria-label="Tutup modal"
         >
           ✕
         </button>
 
-        {/* 1. BANNER SLIDER (OTOMATIS + BISA KLIK / GESER RINGAN DI LAPTOP) */}
+        {/* Banner Slider */}
         <div
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -249,33 +248,37 @@ export default function PopUpDetail({
           onMouseMove={handleTouchMove}
           onMouseUp={handleTouchEnd}
           className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-6 bg-gray-100 select-none cursor-pointer"
-          title="Klik atau geser foto untuk berganti slide"
         >
           <Image
             src={imageList[currentSlide] || company.imageSrc}
             alt={company.name}
             fill
-            unoptimized
-            draggable={false}
-            className="object-cover transition-opacity duration-500 ease-in-out"
             sizes="(max-width: 1024px) 100vw, 896px"
+            className="object-cover transition-opacity duration-500 ease-in-out"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-5 sm:p-7 text-white pointer-events-none">
-            <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full w-fit mb-2 shadow-sm">
+            <span className="bg-[#dbeafe] text-[#2563eb] text-xs font-semibold px-3.5 py-1 rounded-full w-fit mb-2 shadow-sm">
               {company.category}
             </span>
             <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
               {company.name}
             </h2>
             <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-200 mt-1">
-              <svg className="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 text-red-500 shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span>{company.address}</span>
             </div>
           </div>
 
-          {/* Indikator Titik Slider di Bagian Tengah Bawah Foto */}
           {imageList.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full">
               {imageList.map((_, i) => (
@@ -287,27 +290,26 @@ export default function PopUpDetail({
                     setCurrentSlide(i);
                   }}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
-                    currentSlide === i ? "w-6 bg-white" : "w-2 bg-white/40 hover:bg-white/70"
+                    currentSlide === i ? "w-6 bg-white" : "w-2 bg-white/40"
                   }`}
-                  aria-label={`Slide ${i + 1}`}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* 2. JAM KERJA & KUOTA SISWA */}
+        {/* Jam Kerja & Kuota Siswa */}
         <div className="grid grid-cols-2 bg-[#f0f5ff] rounded-2xl p-4 sm:p-5 mb-6 text-center border border-blue-50">
-          <div className="border-r border-blue-200 pr-3">
+          <div className="border-r border-blue-200 pr-3 flex flex-col justify-center">
             <span className="text-[11px] font-bold text-gray-500 tracking-wider uppercase block mb-1">
               JAM KERJA
             </span>
             <p className="text-xs sm:text-sm font-semibold text-gray-800">
-              Shift 1 (Pagi): {company.workHours.shift1}
+              {company.workHours.shift1}
             </p>
             {company.workHours.shift2 && (
               <p className="text-xs sm:text-sm font-semibold text-gray-800">
-                Shift 2 (Siang): {company.workHours.shift2}
+                {company.workHours.shift2}
               </p>
             )}
           </div>
@@ -321,94 +323,142 @@ export default function PopUpDetail({
           </div>
         </div>
 
-        {/* 3. ROLE YANG DIBUTUHKAN (Warna Berubah Sesuai Role Terpilih) */}
+        {/* Role Yang Dibutuhkan */}
         {roleList.length > 0 && (
           <div className="mb-6">
             <h4 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-3">
               ROLE YANG DIBUTUHKAN:
             </h4>
             <div className="flex flex-wrap gap-2.5">
-              {roleList.map((r, idx) => {
-                const isActive = selectedRole === r.role;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedRole(r.role)}
-                    className={`px-5 py-1.5 rounded-full border text-sm font-semibold transition cursor-pointer ${
-                      isActive
-                        ? "bg-[#2563eb] text-white border-[#2563eb] shadow-sm"
-                        : "border-blue-600 text-blue-600 bg-white hover:bg-blue-50"
-                    }`}
-                  >
-                    {r.role}
-                  </button>
-                );
-              })}
+              {roleList.map((r, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedRole(r.role)}
+                  className={`px-6 py-2 rounded-full border text-sm font-semibold transition cursor-pointer ${
+                    selectedRole === r.role
+                      ? "border-[#2563eb] text-[#2563eb] bg-[#eff6ff] shadow-sm ring-1 ring-blue-500"
+                      : "border-blue-400 text-blue-600 bg-white hover:bg-blue-50"
+                  }`}
+                >
+                  {r.role}
+                </button>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 4. HAL PERLU DIKERJAKAN (Dinamis Sesuai Role) */}
+        {/* Hal Perlu Dikerjakan (Daftar Rapi Bernomor) */}
         <div className="mb-6">
-          <h4 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-3">
+          <h4 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-3.5 flex items-center gap-1.5">
             HAL PERLU DIKERJAKAN:
           </h4>
-          <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 font-medium">
-            {currentTasks.map((task, idx) => (
-              <li key={idx}>{task}</li>
-            ))}
-          </ol>
+          {currentTasks.length > 0 ? (
+            <div className="space-y-2.5">
+              {currentTasks.map((task, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed"
+                >
+                  <span className="font-semibold text-gray-900 select-none shrink-0 w-5">
+                    {idx + 1}.
+                  </span>
+                  <p className="flex-1 break-words">{task}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs sm:text-sm text-gray-400 italic">
+              Mengikuti arahan mentor dan penempatan unit kerja.
+            </p>
+          )}
         </div>
 
-        {/* 5. DUA KOLOM: SYARAT BERKAS & FASILITAS */}
+        {/* Syarat Berkas & Fasilitas (Format List Sejajar) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-[#f3f7fd] p-5 rounded-2xl border border-blue-50/60">
             <h4 className="text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
               <span className="text-sm">📄</span> SYARAT BERKAS:
             </h4>
-            <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
-              {company.requirements.map((req, idx) => (
-                <li key={idx}>{req}</li>
-              ))}
-            </ol>
+            <div className="space-y-2">
+              {cleanedRequirements.length > 0 ? (
+                cleanedRequirements.map((req, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 text-xs sm:text-sm text-gray-700 leading-relaxed"
+                  >
+                    <span className="font-semibold text-gray-900 select-none shrink-0 w-4">
+                      {idx + 1}.
+                    </span>
+                    <p className="flex-1 break-words">{req}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 italic">
+                  Sesuai ketentuan sekolah dan instansi penempatan.
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="bg-[#f3f7fd] p-5 rounded-2xl border border-blue-50/60">
             <h4 className="text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
               <span className="text-sm">✨</span> FASILITAS:
             </h4>
-            <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-gray-700 leading-relaxed">
-              {company.facilities.map((fac, idx) => (
-                <li key={idx}>{fac}</li>
-              ))}
-            </ol>
+            <div className="space-y-2">
+              {cleanedFacilities.length > 0 ? (
+                cleanedFacilities.map((fac, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 text-xs sm:text-sm text-gray-700 leading-relaxed"
+                  >
+                    <span className="font-semibold text-gray-900 select-none shrink-0 w-4">
+                      {idx + 1}.
+                    </span>
+                    <p className="flex-1 break-words">{fac}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 italic">
+                  Fasilitas operasional standar tempat PKL.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 6. TESTIMONI SISWA */}
-        {company.testimonial && (
-          <div className="bg-[#f3f7fd] p-5 rounded-2xl border border-blue-50/60 mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center shrink-0">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        {/* Testimoni Siswa */}
+        {company.testimonial && company.testimonial.feedback && (
+          <div className="bg-[#f0f6ff] p-5 sm:p-6 rounded-2xl border border-blue-100 mb-6">
+            <div className="flex items-center gap-3.5 mb-2.5">
+              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="text-sm">
-                <span className="font-bold text-gray-900">{company.testimonial.studentName} </span>
-                <span className="text-gray-500 font-medium">({company.testimonial.school})</span>
+                <span className="font-bold text-slate-900">
+                  {company.testimonial.studentName}{" "}
+                </span>
+                {company.testimonial.school && (
+                  <span className="text-slate-500 font-medium">
+                    ({company.testimonial.school})
+                  </span>
+                )}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed italic pl-1">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed pl-0.5">
               “{company.testimonial.feedback}”
             </p>
           </div>
         )}
 
-        {/* 7. BARIS TOMBOL AKSI */}
+        {/* Tombol Aksi */}
         <div className="flex flex-wrap items-center gap-2.5 pt-2">
-          {/* Tombol Maps */}
           <a
             href={
               company.mapsUrl ||
@@ -420,18 +470,12 @@ export default function PopUpDetail({
             rel="noopener noreferrer"
             className="flex-1 min-w-[170px] bg-[#182752] hover:bg-[#131f42] text-white text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition"
           >
-            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <span>Buka Lokasi Google Maps</span>
+            Buka Lokasi Google Maps
           </a>
 
-          {/* Tombol Bandingkan */}
           <button
             type="button"
-            onClick={() => {
-              if (onBandingkan) onBandingkan(company);
-            }}
+            onClick={() => onBandingkan && onBandingkan(company)}
             className={`text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer ${
               isComparing
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
@@ -441,25 +485,22 @@ export default function PopUpDetail({
             ⚖️ {isComparing ? "Terpilih" : "Bandingkan"}
           </button>
 
-          {/* Tombol Review */}
           <button
             type="button"
             onClick={() => setIsReviewOpen(true)}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl transition cursor-pointer"
           >
             💬 Review
           </button>
 
-          {/* Tombol Kontak */}
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl transition cursor-pointer"
           >
             👤 Kontak
           </button>
 
-          {/* Tombol Tutup */}
           <button
             type="button"
             onClick={onClose}
@@ -469,7 +510,7 @@ export default function PopUpDetail({
           </button>
         </div>
 
-        {/* SUB-MODAL 1: FORM REVIEW (MODERASI STRAPI) */}
+        {/* Modal Form Review */}
         {isReviewOpen && (
           <div
             className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -483,18 +524,23 @@ export default function PopUpDetail({
                 Tulis Review Pengalaman PKL
               </h3>
               <p className="text-xs text-gray-500 mb-5">
-                Review kamu akan ditinjau oleh pihak sekolah/admin sebelum dipublikasikan.
+                Review kamu akan ditinjau oleh pihak sekolah/admin sebelum dipublikasikan[cite: 8].
               </p>
 
               {reviewSuccess ? (
                 <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-2xl text-center text-sm font-medium">
-                  🎉 Terima kasih! Review berhasil dikirim dan sedang menunggu moderasi admin.
+                  🎉 Terima kasih! Review berhasil dikirim dan menunggu moderasi admin[cite: 8].
                 </div>
               ) : (
                 <form onSubmit={handleSubmitReview} className="space-y-4">
+                  {reviewError && (
+                    <div className="bg-red-50 text-red-600 text-xs p-3 rounded-xl border border-red-200">
+                      {reviewError}
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">
-                      Perusahaan yang Direview
+                      Perusahaan
                     </label>
                     <input
                       type="text"
@@ -539,7 +585,7 @@ export default function PopUpDetail({
                       <input
                         type="text"
                         required
-                        placeholder="Contoh: RPL / PM"
+                        placeholder="Contoh: RPL"
                         value={jurusanReviewer}
                         onChange={(e) => setJurusanReviewer(e.target.value)}
                         className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -554,7 +600,7 @@ export default function PopUpDetail({
                     <textarea
                       required
                       rows={3}
-                      placeholder="Ceritakan suasana kerja, perlakuan pembimbing, dan hal yang kamu pelajari..."
+                      placeholder="Ceritakan suasana kerja dan bimbingan selama PKL..."
                       value={pesanReview}
                       onChange={(e) => setPesanReview(e.target.value)}
                       className="w-full border border-gray-300 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -583,7 +629,7 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* SUB-MODAL 2: DETAIL KONTAK (INFORMASI SAJA, TIDAK REDIRECT) */}
+        {/* Modal Kontak */}
         {isContactOpen && (
           <div
             className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -594,62 +640,35 @@ export default function PopUpDetail({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-gray-900">
-                  Kontak Narahubung PKL
-                </h3>
+                <h3 className="text-lg font-bold text-gray-900">Kontak Narahubung</h3>
                 <button
                   type="button"
                   onClick={() => setIsContactOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer"
+                  className="text-gray-400 hover:text-gray-600 font-bold"
                 >
                   ✕
                 </button>
               </div>
 
-              <p className="text-xs text-gray-500 mb-5">
-                Saluran komunikasi resmi yang dapat dihubungi untuk konfirmasi dan pendaftaran PKL di {company.name}:
-              </p>
-
-              <div className="space-y-3 text-sm">
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center gap-3">
-                  <span className="text-lg">📞</span>
-                  <div>
-                    <p className="text-[11px] text-gray-400 font-semibold uppercase">Telepon Kantor</p>
-                    <p className="font-semibold text-gray-800">
-                      {company.contacts?.telepon || "(0261) 201234 / HRD"}
-                    </p>
-                  </div>
+              <div className="space-y-3 text-sm mt-4">
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500">Telepon:</span>
+                  <p className="font-semibold text-gray-800">
+                    {company.contacts?.phone || company.contacts?.telepon || "(0261) 201234"}
+                  </p>
                 </div>
-
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center gap-3">
-                  <span className="text-lg">💬</span>
-                  <div>
-                    <p className="text-[11px] text-gray-400 font-semibold uppercase">WhatsApp Humas / HR</p>
-                    <p className="font-semibold text-gray-800">
-                      {company.contacts?.whatsapp || "+62 812-3456-7890"}
-                    </p>
-                  </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500">WhatsApp:</span>
+                  <p className="font-semibold text-gray-800">
+                    {company.contacts?.whatsapp || "+62 812-3456-7890"}
+                  </p>
                 </div>
-
-                <div className="p-3.5 bg-gray-50 border border-gray-100 rounded-2xl flex items-center gap-3">
-                  <span className="text-lg">✉️</span>
-                  <div>
-                    <p className="text-[11px] text-gray-400 font-semibold uppercase">Email Rekrutmen PKL</p>
-                    <p className="font-semibold text-gray-800">
-                      {company.contacts?.email || `pkl@${company.name.toLowerCase().replace(/\s+/g, "")}.co.id`}
-                    </p>
-                  </div>
+                <div className="p-3 bg-gray-50 rounded-xl">
+                  <span className="text-xs text-gray-500">Email:</span>
+                  <p className="font-semibold text-gray-800">
+                    {company.contacts?.email || `pkl@${company.name.toLowerCase().replace(/\s+/g, "")}.co.id`}
+                  </p>
                 </div>
-              </div>
-
-              <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsContactOpen(false)}
-                  className="w-full bg-[#182752] text-white py-2.5 rounded-xl font-semibold text-xs sm:text-sm hover:bg-[#131f42] transition cursor-pointer"
-                >
-                  Selesai
-                </button>
               </div>
             </div>
           </div>
