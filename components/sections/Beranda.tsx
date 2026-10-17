@@ -58,7 +58,7 @@ export default function HeroSection() {
 
   return (
     <section className="relative w-full min-h-[460px] md:min-h-[520px] flex items-center overflow-hidden bg-white">
-      {/* Gambar Asli dari Database Strapi (Jernih tanpa overlay atau blur) */}
+      {/* Gambar Asli dari Database Strapi */}
       {heroImage && (
         <div className="absolute inset-0 z-0 pointer-events-none select-none">
           <Image
@@ -71,7 +71,7 @@ export default function HeroSection() {
         </div>
       )}
 
-      {/* Konten Teks & Form Pencarian di Sisi Kiri */}
+      {/* Konten Teks & Form Pencarian */}
       <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <div className="max-w-xl text-left space-y-6">
           {/* Badge Tag */}
@@ -95,15 +95,22 @@ export default function HeroSection() {
           {/* Form Pencarian */}
           <form onSubmit={handleSearch} className="pt-2 flex items-center gap-2 max-w-md">
             <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 text-xs">
-                🔍
-              </span>
+              {/* Icon PNG Pengganti Emoji */}
+              <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+                <Image
+                  src="/icons/searchabu.png"
+                  alt="Cari"
+                  width={18}
+                  height={18}
+                  className="object-contain"
+                />
+              </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama tempat, jurusan..."
-                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm text-slate-800 placeholder-slate-400"
               />
             </div>
             <button
@@ -116,7 +123,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Indikator Titik Slider di Bagian Tengah Bawah */}
+      {/* Indikator Titik Slider */}
       {sliders.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2">
           {sliders.map((_, idx) => (

@@ -82,19 +82,15 @@ export default function Footer() {
             <Link href="#" className="hover:text-white">Kebijakan Privasi</Link>
           </div>
 
-          {/* Social Icons Section */}
-        <div className="flex items-center gap-4">
-          <a href="https://www.facebook.com/share/14uhVhxiUB1/" className="hover:opacity-80 transition-opacity">
-            <Image src="/icons/facebook.png" alt="Facebook" width={20} height={20} />
-          </a>
-          <a href="https://www.instagram.com/smkn2sumedang.official?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
-             className="hover:opacity-80 transition-opacity">
-            <Image src="/icons/instagramm.png" alt="Instagram" width={20} height={20} />
-          </a>
-          <a href="https://youtube.com/@smkn2sumedang?si=-4xkE4VVyvYL-yz2" className="hover:opacity-80 transition-opacity">
-            <Image src="/icons/youtube.png" alt="Youtube" width={20} height={20} />
-          </a>
-        </div>
+    {/* Social Icons Section */}
+<div className="flex items-center gap-3.5">
+  <a href="https://www.facebook.com/share/14uhVhxiUB1/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+  <Image src="/icons/facebook.png" alt="Facebook" width={25} height={25} className="object-contain" /></a>
+  <a href="https://www.instagram.com/smkn2sumedang.official?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+  <Image src="/icons/instagram.png" alt="Instagram" width={22} height={22} className="object-contain" /></a>
+  <a href="https://youtube.com/@smkn2sumedang?si=-4xkE4VVyvYL-yz2" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+  <Image src="/icons/youtube.png" alt="Youtube" width={25} height={25} className="object-contain" /></a>
+</div>
         </div>
       </div>
     </footer>
