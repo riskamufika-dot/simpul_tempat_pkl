@@ -11,6 +11,7 @@ interface SliderItem {
   subtitle?: string;
   image?: { url: string };
   image_url?: string;
+  sort_order?: number;
 }
 
 export default function HeroSection() {
@@ -24,7 +25,9 @@ export default function HeroSection() {
       try {
         const data = await getHeroSliders();
         if (Array.isArray(data) && data.length > 0) {
-          setSliders(data);
+          // Ambil hanya slide milik Beranda (sort_order = 1)
+          const homeSlides = data.filter((s: any) => Number(s.sort_order) === 1);
+          setSliders(homeSlides.length > 0 ? homeSlides : data);
         }
       } catch (err) {
         console.error('Gagal mengambil data hero slider:', err);
@@ -43,46 +46,56 @@ export default function HeroSection() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(searchQuery ? `/daftar-tempat?search=${encodeURIComponent(searchQuery)}` : '/daftar-tempat');
+    router.push(
+      searchQuery
+        ? `/daftar-tempat?search=${encodeURIComponent(searchQuery)}`
+        : '/daftar-tempat'
+    );
   };
 
   const currentSlider = sliders[activeSlide];
   const heroImage = currentSlider?.image?.url || currentSlider?.image_url;
 
   return (
-    <section className="bg-white py-12 md:py-20 px-4 text-center relative overflow-hidden">
-      <div className="container mx-auto max-w-4xl space-y-8 relative z-10">
-        {heroImage && (
-          <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-2xl overflow-hidden shadow-md mb-6">
-            <Image
-              src={heroImage}
-              alt={currentSlider?.title || 'Banner SIMPUL'}
-              fill
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-6 text-white text-left">
-              {currentSlider?.title && (
-                <h2 className="text-xl md:text-3xl font-bold">{currentSlider.title}</h2>
-              )}
-              {currentSlider?.subtitle && (
-                <p className="text-xs md:text-sm text-gray-200 mt-1">{currentSlider.subtitle}</p>
-              )}
-            </div>
+    <section className="relative w-full min-h-[460px] md:min-h-[520px] flex items-center overflow-hidden bg-white">
+      {/* Gambar Asli dari Database Strapi (Jernih tanpa overlay atau blur) */}
+      {heroImage && (
+        <div className="absolute inset-0 z-0 pointer-events-none select-none">
+          <Image
+            src={heroImage}
+            alt={currentSlider?.title || 'Latar Belakang Beranda'}
+            fill
+            className="object-cover object-center transition-all duration-700 ease-in-out"
+            priority
+          />
+        </div>
+      )}
+
+      {/* Konten Teks & Form Pencarian di Sisi Kiri */}
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="max-w-xl text-left space-y-6">
+          {/* Badge Tag */}
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 shadow-xs">
+            <span className="text-xs font-semibold text-blue-600 tracking-wide">
+              Temukan Tempat PKL Terbaik
+            </span>
           </div>
-        )}
 
-        <div className="space-y-4 max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-sky-800 tracking-tight">
-            Temukan tempat PKL
-          </h1>
-          <p className="text-gray-600 text-xs md:text-sm leading-relaxed max-w-lg mx-auto">
-            Pusat informasi lengkap untuk membantu siswa menemukan tempat PKL yang sesuai minat dan kebutuhan
-          </p>
+          {/* Judul & Deskripsi */}
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#182752] tracking-tight leading-[1.18]">
+              {currentSlider?.title || 'Temukan tempat PKL'}
+            </h1>
+            <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-lg font-medium">
+              {currentSlider?.subtitle ||
+                'Pusat informasi lengkap untuk membantu siswa menemukan tempat PKL yang sesuai minat dan kebutuhan'}
+            </p>
+          </div>
 
-          <form onSubmit={handleSearch} className="pt-4 flex items-center justify-center gap-2 max-w-md mx-auto">
+          {/* Form Pencarian */}
+          <form onSubmit={handleSearch} className="pt-2 flex items-center gap-2 max-w-md">
             <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-400 text-xs">
+              <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 text-xs">
                 🔍
               </span>
               <input
@@ -90,18 +103,37 @@ export default function HeroSection() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama tempat, jurusan..."
-                className="w-full pl-10 pr-4 py-2.5 text-xs border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-sky-700 bg-gray-50/50"
+                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm"
               />
             </div>
             <button
               type="submit"
-              className="bg-sky-800 hover:bg-sky-900 text-white text-xs font-semibold px-6 py-2.5 rounded-full transition cursor-pointer"
+              className="bg-[#182752] hover:bg-[#111c3b] text-white text-xs sm:text-sm font-semibold px-6 py-2.5 rounded-full transition cursor-pointer shadow-sm shrink-0"
             >
               Cari
             </button>
           </form>
         </div>
       </div>
+
+      {/* Indikator Titik Slider di Bagian Tengah Bawah */}
+      {sliders.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2">
+          {sliders.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveSlide(idx)}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                activeSlide === idx
+                  ? 'w-6 bg-[#182752]'
+                  : 'w-2 bg-slate-300 hover:bg-slate-400'
+              }`}
+              aria-label={`Slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

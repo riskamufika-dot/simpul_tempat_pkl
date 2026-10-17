@@ -114,9 +114,18 @@ function DaftarTempatContent() {
             .filter(Boolean)
         );
 
+        // Ambil slide khusus Daftar Tempat (sort_order = 2)
+        const catalogSliders = (resSliders || []).filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (s: any) => Number(s.sort_order) === 2
+        );
+
+        const activeSliders =
+          catalogSliders.length > 0 ? catalogSliders : resSliders || [];
+
         setHeroImages(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (resSliders || [])
+          activeSliders
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map((s: any) => s.image?.url || s.image_url)
             .filter(Boolean)
@@ -130,16 +139,13 @@ function DaftarTempatContent() {
     loadData();
   }, []);
 
-  // Dropdown Bidang: master Strapi + role yang ada di data
+  // Dropdown Bidang: HANYA dari master Business Field di Strapi + bidang perusahaan yang ada di data
   const daftarBidang = useMemo(() => {
     const s = new Set<string>(masterBidang);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.forEach((d: any) => {
-      if (d.bidang && d.bidang.trim() !== "") s.add(d.bidang);
-      if (Array.isArray(d.role)) {
-        d.role.forEach((r: string) => {
-          if (r && r !== "Umum") s.add(r);
-        });
+      if (d.bidang && typeof d.bidang === "string" && d.bidang.trim() !== "") {
+        s.add(d.bidang.trim());
       }
     });
     return Array.from(s).filter(Boolean).sort();
@@ -168,9 +174,7 @@ function DaftarTempatContent() {
         : true;
 
       const matchBidang = bidang
-        ? (t.bidang && t.bidang.toLowerCase() === bidang.toLowerCase()) ||
-          (Array.isArray(t.role) &&
-            t.role.some((r: string) => r.toLowerCase() === bidang.toLowerCase()))
+        ? t.bidang && t.bidang.toLowerCase() === bidang.toLowerCase()
         : true;
 
       const matchJurusan = jFilter

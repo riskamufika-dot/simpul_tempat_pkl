@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 interface PopUpBandingkanProps {
@@ -22,24 +22,52 @@ export default function PopUpBandingkan({
 }: PopUpBandingkanProps) {
   const activePlaces = (items || places || []).slice(0, 2);
 
+  const [selectedRole1, setSelectedRole1] = useState("");
+  const [selectedRole2, setSelectedRole2] = useState("");
+
   const formatPlace = (place: any, index: number) => {
     if (!place) return null;
 
-    const rawRoles =
-      place.roles ||
-      place.posisi ||
-      place.bidang ||
-      place.role ||
-      place.business_fields ||
-      ["Kasir", "Display Staff"];
+    // 1. Ekstraksi daftar detailedRoles { role: string, tasks: string[] }
+    let extractedDetailedRoles: { role: string; tasks: string[] }[] = [];
 
-    const safeRoles = Array.isArray(rawRoles)
-      ? rawRoles.map((r) =>
-          typeof r === "string" ? r : r?.name || r?.role || r?.bidang || String(r)
-        )
-      : typeof rawRoles === "string" && rawRoles.trim() !== ""
-      ? rawRoles.split(",").map((s) => s.trim())
-      : ["Kasir", "Display Staff"];
+    if (Array.isArray(place.detailedRoles) && place.detailedRoles.length > 0) {
+      extractedDetailedRoles = place.detailedRoles;
+    } else if (
+      Array.isArray(place.roles) &&
+      place.roles.length > 0 &&
+      typeof place.roles[0] === "object"
+    ) {
+      extractedDetailedRoles = place.roles;
+    } else if (Array.isArray(place.role) && place.role.length > 0) {
+      const defaultTasks = Array.isArray(place.tugas)
+        ? place.tugas
+        : Array.isArray(place.tasks)
+        ? place.tasks
+        : [];
+      extractedDetailedRoles = place.role.map((r: any) => ({
+        role: typeof r === "string" ? r : r?.role || r?.title || String(r),
+        tasks: defaultTasks,
+      }));
+    } else if (Array.isArray(place.roles) && place.roles.length > 0) {
+      const defaultTasks = Array.isArray(place.tugas)
+        ? place.tugas
+        : Array.isArray(place.tasks)
+        ? place.tasks
+        : [];
+      extractedDetailedRoles = place.roles.map((r: any) => ({
+        role: typeof r === "string" ? r : r?.role || r?.title || String(r),
+        tasks: defaultTasks,
+      }));
+    }
+
+    // Filter agar nama role valid dan bukan nama bidang/kategori umum
+    extractedDetailedRoles = extractedDetailedRoles.filter(
+      (item) => item.role && !/^[a-z0-9]{20,}$/i.test(item.role)
+    );
+
+    // Ambil hanya nama-nama posisinya untuk dropdown
+    const roleOptions = extractedDetailedRoles.map((item) => item.role);
 
     return {
       id: place.id !== undefined ? place.id : index,
@@ -48,6 +76,7 @@ export default function PopUpBandingkan({
         place.imageSrc ||
         place.gambar?.url ||
         place.gambar ||
+        place.images?.[0] ||
         "/images/placeholder.png",
       address:
         place.address ||
@@ -56,11 +85,13 @@ export default function PopUpBandingkan({
         "Alamat belum tersedia",
       shift1:
         place.shift1 ||
+        place.jamKerja?.[0] ||
         place.jam_kerja?.shift1 ||
         place.workHours?.shift1 ||
         "Shift 1 (Pagi): 08.00 – 16.00 WIB",
       shift2:
         place.shift2 ||
+        place.jamKerja?.[1] ||
         place.jam_kerja?.shift2 ||
         place.workHours?.shift2 ||
         "Shift 2 (Siang): 13.00 – 21.00 WIB",
@@ -69,37 +100,44 @@ export default function PopUpBandingkan({
         place.quota ||
         place.kuota ||
         "Tersedia",
-      roles: safeRoles,
-      tasks:
+      detailedRoles: extractedDetailedRoles,
+      roles: roleOptions.length > 0 ? roleOptions : ["Administrasi Operasional"],
+      defaultTasks:
         place.tasks ||
         place.tugas ||
         place.hal_dikerjakan || [
-          "Membantu proses transaksi",
-          "Menata area kasir",
-          "Memberikan pelayanan kepada pelanggan sesuai arahan.",
+          "Membantu operasional dan administrasi harian",
+          "Membantu pengarsipan dokumen sesuai arahan pembimbing",
         ],
       facilities:
         place.facilities ||
         place.fasilitas || [
-          "Tempat pelaksanaan PKL",
-          "Pembimbing selama kegiatan PKL",
-          "Pengalaman bekerja di lingkungan kantor",
+          "Ruang kerja dan sarana penunjang praktik",
+          "Bimbingan langsung dari pembimbing lapangan",
+          "Sertifikat / Surat Keterangan Selesai PKL",
         ],
       requirements:
         place.requirements ||
-        place.syarat_berkas ||
-        place.berkas || [
-          "Surat pengantar/permohonan PKL dari sekolah",
-          "Surat tugas atau penempatan PKL",
-          "Fotokopi kartu pelajar",
+        place.syaratBerkas ||
+        place.syarat_berkas || [
+          "Surat permohonan PKL resmi dari sekolah",
+          "Biodata siswa / Curriculum Vitae (CV)",
+          "Fotokopi Kartu Pelajar (KTA)",
         ],
     };
   };
 
   const comparedList = activePlaces.map(formatPlace).filter(Boolean);
 
-  const [selectedRole1, setSelectedRole1] = useState("");
-  const [selectedRole2, setSelectedRole2] = useState("");
+  // Inisialisasi otomatis role terpilih saat modal dibuka
+  useEffect(() => {
+    if (comparedList[0]?.roles?.length) {
+      setSelectedRole1(comparedList[0].roles[0]);
+    }
+    if (comparedList[1]?.roles?.length) {
+      setSelectedRole2(comparedList[1].roles[0]);
+    }
+  }, [items, places]);
 
   if (!isOpen) return null;
 
@@ -134,6 +172,18 @@ export default function PopUpBandingkan({
     );
   }
 
+  // Fungsi helper untuk mengambil tugas spesifik berdasarkan role terpilih
+  const getActiveTasks = (place: any, selectedRole: string) => {
+    if (!place) return [];
+    const found = place.detailedRoles?.find(
+      (dr: any) => dr.role === selectedRole
+    );
+    if (found && Array.isArray(found.tasks) && found.tasks.length > 0) {
+      return found.tasks;
+    }
+    return place.defaultTasks || [];
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-black/60 backdrop-blur-sm overflow-y-auto"
@@ -160,9 +210,9 @@ export default function PopUpBandingkan({
           </div>
         </div>
 
-        {/* Tabel Komparasi Bersih Tanpa Garis-Garis */}
+        {/* Tabel Komparasi Bersih & Lurus Sejajar */}
         <div className="w-full text-sm">
-          {/* BARIS 1: Profil & Gambar */}
+          {/* BARIS 1: Profil Perusahaan */}
           <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start">
             <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 pt-2">
               Profil Perusahaan:
@@ -257,57 +307,61 @@ export default function PopUpBandingkan({
             </div>
           </div>
 
-          {/* BARIS 5: Bidang / Role */}
+          {/* BARIS 5: Role / Posisi Pekerjaan Per Perusahaan */}
           <div className="grid grid-cols-12 gap-4 py-3.5 px-3 rounded-2xl items-center">
             <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
-              Bidang/Role:
+              Posisi / Role:
             </div>
             <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-              {comparedList.map((place: any, idx: number) => (
-                <div key={place.id} className="relative">
-                  <select
-                    value={idx === 0 ? selectedRole1 : selectedRole2}
-                    onChange={(e) =>
-                      idx === 0
-                        ? setSelectedRole1(e.target.value)
-                        : setSelectedRole2(e.target.value)
-                    }
-                    className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-medium rounded-full py-2 px-5 pr-10 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm"
-                  >
-                    <option value="">Pilih Bidang/Role</option>
-                    {Array.isArray(place.roles) &&
-                      place.roles.map((r: string, i: number) => (
+              {comparedList.map((place: any, idx: number) => {
+                const currentRole = idx === 0 ? selectedRole1 : selectedRole2;
+                return (
+                  <div key={place.id} className="relative">
+                    <select
+                      value={currentRole}
+                      onChange={(e) =>
+                        idx === 0
+                          ? setSelectedRole1(e.target.value)
+                          : setSelectedRole2(e.target.value)
+                      }
+                      className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-semibold rounded-full py-2 px-5 pr-10 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm"
+                    >
+                      {place.roles.map((r: string, i: number) => (
                         <option key={i} value={r}>
                           {r}
                         </option>
                       ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#2563eb]">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[#2563eb]">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* BARIS 6: Hal yang Perlu Dikerjakan */}
+          {/* BARIS 6: Hal yang Perlu Dikerjakan (Sinkron dengan Role) */}
           <div className="grid grid-cols-12 gap-4 py-4 px-3 rounded-2xl items-start bg-slate-50/70">
             <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500">
               Hal yang Perlu Dikerjakan:
             </div>
             <div className="col-span-12 lg:col-span-10 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="text-xs sm:text-sm text-gray-800">
-                  <ol className="list-decimal list-outside pl-4 space-y-2 leading-relaxed">
-                    {Array.isArray(place.tasks) &&
-                      place.tasks.map((task: string, i: number) => (
+              {comparedList.map((place: any, idx: number) => {
+                const chosenRole = idx === 0 ? selectedRole1 : selectedRole2;
+                const taskList = getActiveTasks(place, chosenRole);
+                return (
+                  <div key={place.id} className="text-xs sm:text-sm text-gray-800">
+                    <ol className="list-decimal list-outside pl-4 space-y-2 leading-relaxed">
+                      {taskList.map((task: string, i: number) => (
                         <li key={i}>{task}</li>
                       ))}
-                  </ol>
-                </div>
-              ))}
+                    </ol>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
