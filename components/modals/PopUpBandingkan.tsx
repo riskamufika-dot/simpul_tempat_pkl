@@ -12,6 +12,17 @@ interface PopUpBandingkanProps {
   onRemoveItem?: (id: any) => void;
 }
 
+// Daftar opsi parameter komparasi yang bisa dipilih user
+const PARAMETER_OPTIONS = [
+  { id: "lokasi", label: "Lokasi" },
+  { id: "jamKerja", label: "Jam Kerja" },
+  { id: "kuota", label: "Kuota Siswa" },
+  { id: "role", label: "Posisi / Role" },
+  { id: "tugas", label: "Hal Dikerjakan" },
+  { id: "fasilitas", label: "Fasilitas" },
+  { id: "syarat", label: "Syarat Berkas" },
+];
+
 export default function PopUpBandingkan({
   isOpen,
   onClose,
@@ -24,6 +35,25 @@ export default function PopUpBandingkan({
 
   const [selectedRole1, setSelectedRole1] = useState("");
   const [selectedRole2, setSelectedRole2] = useState("");
+
+  // State untuk melacak parameter apa saja yang ingin ditampilkan user
+  const [selectedParams, setSelectedParams] = useState<string[]>([
+    "lokasi",
+    "jamKerja",
+    "kuota",
+    "role",
+    "tugas",
+    "fasilitas",
+    "syarat",
+  ]);
+
+  const toggleParam = (id: string) => {
+    setSelectedParams((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
+  };
+
+  const isVisible = (id: string) => selectedParams.includes(id);
 
   const formatPlace = (place: any, index: number) => {
     if (!place) return null;
@@ -183,7 +213,7 @@ export default function PopUpBandingkan({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start gap-3 sm:gap-4 mb-6">
+        <div className="flex items-start gap-3 sm:gap-4 mb-4">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#1e3a8a] text-white flex items-center justify-center shrink-0 mt-0.5">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
@@ -196,6 +226,50 @@ export default function PopUpBandingkan({
             <p className="text-[11px] sm:text-sm text-gray-500 mt-0.5">
               Bandingkan parameter kunci sebelum mengajukan surat tugas
             </p>
+          </div>
+        </div>
+
+        {/* Pilihan Parameter Komparasi */}
+        <div className="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3 sm:p-4 mb-5">
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <span className="text-[10px] sm:text-xs font-bold text-gray-600 uppercase tracking-wider">
+              Tampilkan Parameter:
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedParams(
+                  selectedParams.length === PARAMETER_OPTIONS.length
+                    ? ["lokasi", "jamKerja"]
+                    : PARAMETER_OPTIONS.map((p) => p.id)
+                )
+              }
+              className="text-[10px] sm:text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+            >
+              {selectedParams.length === PARAMETER_OPTIONS.length
+                ? "Pilih Sebagian"
+                : "Pilih Semua"}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            {PARAMETER_OPTIONS.map((param) => {
+              const active = isVisible(param.id);
+              return (
+                <button
+                  key={param.id}
+                  type="button"
+                  onClick={() => toggleParam(param.id)}
+                  className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition cursor-pointer border ${
+                    active
+                      ? "bg-[#1e3a8a] border-[#1e3a8a] text-white shadow-sm"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {active ? "✓ " : "+ "}
+                  {param.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -249,135 +323,149 @@ export default function PopUpBandingkan({
           </div>
 
           {/* BARIS 2: Lokasi */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Lokasi (Jarak):
+          {isVisible("lokasi") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Lokasi (Jarak):
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any) => (
+                  <div key={place.id} className="flex items-start gap-1.5 text-[11px] sm:text-sm text-gray-800 leading-relaxed">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <span>{place.address}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="flex items-start gap-1.5 text-[11px] sm:text-sm text-gray-800 leading-relaxed">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                  </svg>
-                  <span>{place.address}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* BARIS 3: Jam Kerja */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Jam Kerja:
+          {isVisible("jamKerja") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Jam Kerja:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any) => (
+                  <div key={place.id} className="text-[11px] sm:text-sm text-gray-800 leading-relaxed space-y-0.5">
+                    <p>{place.shift1}</p>
+                    <p>{place.shift2}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="text-[11px] sm:text-sm text-gray-800 leading-relaxed space-y-0.5">
-                  <p>{place.shift1}</p>
-                  <p>{place.shift2}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* BARIS 4: Kuota */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-center bg-slate-50/70">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Kuota Siswa:
+          {isVisible("kuota") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-center bg-slate-50/70">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Kuota Siswa:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any) => (
+                  <div key={place.id} className="text-[11px] sm:text-sm text-gray-800 font-semibold">
+                    <span className="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 bg-blue-100/70 text-blue-700 rounded-lg text-[10px] sm:text-xs">
+                      {place.quota}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="text-[11px] sm:text-sm text-gray-800 font-semibold">
-                  <span className="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 bg-blue-100/70 text-blue-700 rounded-lg text-[10px] sm:text-xs">
-                    {place.quota}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* BARIS 5: Role */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-center">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Posisi / Role:
-            </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any, idx: number) => (
-                <div key={place.id} className="relative">
-                  <select
-                    value={roleDipilih(idx)}
-                    onChange={(e) => ubahRole(idx, e.target.value)}
-                    className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-semibold rounded-full py-1.5 sm:py-2 px-3 sm:px-5 pr-7 sm:pr-10 text-[10px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm truncate"
-                  >
-                    {place.roles.map((r: string, i: number) => (
-                      <option key={i} value={r}>{r}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-2.5 sm:right-4 flex items-center text-[#2563eb]">
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+          {isVisible("role") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-center">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Posisi / Role:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any, idx: number) => (
+                  <div key={place.id} className="relative">
+                    <select
+                      value={roleDipilih(idx)}
+                      onChange={(e) => ubahRole(idx, e.target.value)}
+                      className="w-full appearance-none bg-white border border-[#2563eb] text-[#2563eb] font-semibold rounded-full py-1.5 sm:py-2 px-3 sm:px-5 pr-7 sm:pr-10 text-[10px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shadow-sm truncate"
+                    >
+                      {place.roles.map((r: string, i: number) => (
+                        <option key={i} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2.5 sm:right-4 flex items-center text-[#2563eb]">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* BARIS 6: Tugas */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Hal yang Perlu Dikerjakan:
+          {isVisible("tugas") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Hal yang Perlu Dikerjakan:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any, idx: number) => (
+                  <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
+                    <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
+                      {getActiveTasks(place, roleDipilih(idx)).map((task: string, i: number) => (
+                        <li key={i}>{task}</li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any, idx: number) => (
-                <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
-                  <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
-                    {getActiveTasks(place, roleDipilih(idx)).map((task: string, i: number) => (
-                      <li key={i}>{task}</li>
-                    ))}
-                  </ol>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* BARIS 7: Fasilitas */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Fasilitas:
+          {isVisible("fasilitas") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Fasilitas:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any) => (
+                  <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
+                    <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
+                      {Array.isArray(place.facilities) &&
+                        place.facilities.map((fac: string, i: number) => (
+                          <li key={i}>{fac}</li>
+                        ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
-                  <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
-                    {Array.isArray(place.facilities) &&
-                      place.facilities.map((fac: string, i: number) => (
-                        <li key={i}>{fac}</li>
-                      ))}
-                  </ol>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
           {/* BARIS 8: Syarat Berkas */}
-          <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
-            <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-              Syarat Berkas:
+          {isVisible("syarat") && (
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
+              <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
+                Syarat Berkas:
+              </div>
+              <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                {comparedList.map((place: any) => (
+                  <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
+                    <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
+                      {Array.isArray(place.requirements) &&
+                        place.requirements.map((req: string, i: number) => (
+                          <li key={i}>{req}</li>
+                        ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-              {comparedList.map((place: any) => (
-                <div key={place.id} className="text-[11px] sm:text-sm text-gray-800">
-                  <ol className="list-decimal list-outside pl-3 sm:pl-4 space-y-1.5 leading-relaxed">
-                    {Array.isArray(place.requirements) &&
-                      place.requirements.map((req: string, i: number) => (
-                        <li key={i}>{req}</li>
-                      ))}
-                  </ol>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer Tombol */}

@@ -186,8 +186,11 @@ function DaftarTempatContent() {
     });
   }, [data, kata, bidang, jurusan]);
 
+  // Cek apakah user sedang aktif mencari / memfilter
+  const sedangMencari = Boolean(kata.trim() || bidang || jurusan);
+
   return (
-   <main className="min-h-screen bg-slate-800 text-white">
+    <main className="min-h-screen bg-[#182752] text-white">
       <Navbar />
 
       <HeaderDaftarTempat
@@ -198,20 +201,27 @@ function DaftarTempatContent() {
       />
 
       <div className="mx-auto max-w-7xl px-3 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8">
-        {/* Bar filter */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <FilterTempat
-            bidang={bidang}
-            jurusan={jurusan}
-            daftarBidang={daftarBidang}
-            daftarJurusan={daftarJurusan}
-            onBidang={setBidang}
-            onJurusan={setJurusan}
-          />
-          <span className="text-xs font-medium text-gray-200">
-            Ditemukan{" "}
-            <strong className="text-white">{hasilFilter.length}</strong> tempat PKL
-          </span>
+        {/* Bar filter: Membentang penuh 100% selebar container daftar kartu */}
+        <div className="mb-6 w-full space-y-2">
+          <div className="w-full">
+            <FilterTempat
+              bidang={bidang}
+              jurusan={jurusan}
+              daftarBidang={daftarBidang}
+              daftarJurusan={daftarJurusan}
+              onBidang={setBidang}
+              onJurusan={setJurusan}
+            />
+          </div>
+
+          {/* Hanya muncul saat user mengetik kata kunci atau memilih opsi filter */}
+          {sedangMencari && (
+            <div className="flex justify-end pt-1">
+              <span className="text-xs font-medium text-slate-300">
+                Ditemukan <strong className="text-white font-bold">{hasilFilter.length}</strong> tempat PKL
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Daftar kartu */}
@@ -222,7 +232,7 @@ function DaftarTempatContent() {
             ))}
           </div>
         ) : hasilFilter.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-14 text-center text-slate-500 shadow-sm">
+          <div className="rounded-3xl border border-dashed border-slate-700 bg-[#162244] p-14 text-center text-slate-300 shadow-sm">
             {kata
               ? `Tempat PKL "${kata}" tidak ada di data kami.`
               : "Tidak ada tempat PKL yang cocok dengan filter yang dipilih."}
@@ -268,7 +278,7 @@ function DaftarTempatContent() {
 
 export default function DaftarTempatPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f8fafc]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#182752]" />}>
       <DaftarTempatContent />
     </Suspense>
   );

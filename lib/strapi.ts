@@ -195,13 +195,16 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
 
     if (companiesData.length === 0) return [];
 
-    // 1. Peta Master Roles (Role ID / documentId -> Title)
-    const roleTitleMap = new Map<string, string>();
+    // 1. Peta Master Roles (Role ID / documentId -> { title, tasks })
+    const roleMasterMap = new Map<string, { title: string; tasks: string[] }>();
     masterRolesData.forEach((r: any) => {
       const title = r.title || r.name;
+      // Tugas di Master Role Strapi tersimpan di kolom description
+      const tasks = parseList(r.description || r.responsibilities || r.tasks);
       if (title) {
-        if (r.id) roleTitleMap.set(String(r.id), title);
-        if (r.documentId) roleTitleMap.set(String(r.documentId), title);
+        const val = { title, tasks };
+        if (r.id) roleMasterMap.set(String(r.id), val);
+        if (r.documentId) roleMasterMap.set(String(r.documentId), val);
       }
     });
 
@@ -218,21 +221,32 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         cr.role_name ||
         "";
 
-      // Cek relasi ke master role jika hanya berupa ID
-      if (!roleTitle && cr.role) {
-        const refId1 = String(cr.role.documentId || "");
-        const refId2 = String(cr.role.id || "");
-        const refIdRaw =
-          typeof cr.role === "string" || typeof cr.role === "number"
-            ? String(cr.role)
-            : "";
+      let tasks = parseList(
+        cr.description ||
+        cr.responsibilities ||
+        cr.tasks ||
+        cr.role?.description ||
+        cr.role?.responsibilities
+      );
 
-        if (refId1 && roleTitleMap.has(refId1)) roleTitle = roleTitleMap.get(refId1)!;
-        else if (refId2 && roleTitleMap.has(refId2)) roleTitle = roleTitleMap.get(refId2)!;
-        else if (refIdRaw && roleTitleMap.has(refIdRaw)) roleTitle = roleTitleMap.get(refIdRaw)!;
+      // Cek relasi ke master role jika ada ID relasi
+      const refId1 = String(cr.role?.documentId || "");
+      const refId2 = String(cr.role?.id || "");
+      const refIdRaw =
+        typeof cr.role === "string" || typeof cr.role === "number"
+          ? String(cr.role)
+          : "";
+
+      const masterEntry =
+        (refId1 && roleMasterMap.get(refId1)) ||
+        (refId2 && roleMasterMap.get(refId2)) ||
+        (refIdRaw && roleMasterMap.get(refIdRaw));
+
+      if (masterEntry) {
+        if (!roleTitle) roleTitle = masterEntry.title;
+        if (tasks.length === 0) tasks = masterEntry.tasks;
       }
 
-      const tasks = parseList(cr.responsibilities || cr.tasks);
       const val = { role: roleTitle, tasks };
 
       if (cr.id) companyRoleDetailMap.set(String(cr.id), val);
@@ -286,7 +300,9 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
       const bidangNama =
         bfItem?.name || bfItem?.title || (typeof bfItem === "string" ? bfItem : "");
 
-      const companyTasks = parseList(item.responsibilities);
+      const companyTasks = parseList(
+        item.responsibilities || item.tasks || item.tugas || item.description
+      );
 
       const detailedRoles: { role: string; tasks: string[] }[] = [];
       const roleNamesSet = new Set<string>();
@@ -296,7 +312,7 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         roleNamesSet.add(role);
         detailedRoles.push({
           role,
-          tasks: tasks.length > 0 ? tasks : companyTasks,
+          tasks,
         });
       };
 
@@ -324,14 +340,16 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         }
 
         // 2. Cek di Master Role Map
-        const directTitle =
-          (keyDocId && roleTitleMap.get(keyDocId)) ||
-          (keyId && roleTitleMap.get(keyId)) ||
-          (keyRaw && roleTitleMap.get(keyRaw));
+        const masterDetail =
+          (keyDocId && roleMasterMap.get(keyDocId)) ||
+          (keyId && roleMasterMap.get(keyId)) ||
+          (keyRaw && roleMasterMap.get(keyRaw));
 
-        if (directTitle) {
-          const tasks = parseList(entry?.responsibilities || entry?.tasks);
-          addRole(directTitle, tasks);
+        if (masterDetail) {
+          const directTasks = parseList(
+            entry?.description || entry?.responsibilities || entry?.tasks
+          );
+          addRole(masterDetail.title, directTasks.length > 0 ? directTasks : masterDetail.tasks);
           return;
         }
 
@@ -346,7 +364,11 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
             "";
           if (embeddedTitle) {
             const tasks = parseList(
-              entry.responsibilities || entry.tasks || entry.role?.responsibilities
+              entry.description ||
+              entry.responsibilities ||
+              entry.tasks ||
+              entry.role?.description ||
+              entry.role?.responsibilities
             );
             addRole(embeddedTitle, tasks);
           }

@@ -46,7 +46,7 @@ export interface PopUpDetailProps {
   onBandingkan?: (company: CompanyDetail | any) => void;
 }
 
-/* ---------- Ikon SVG (warna mengikuti teks, sama di semua perangkat) ---------- */
+/* ---------- Ikon SVG ---------- */
 
 const ikonKelas = "h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4";
 
@@ -86,9 +86,8 @@ const IkonFasilitas = () => (
   </svg>
 );
 
-/* ---------- Helper ---------- */
+/* ---------- Helper Pemecah Teks ---------- */
 
-// Membersihkan format teks list (tanda petik, kurung siku, bullet berlebih)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanTaskList(rawTasks: any): string[] {
   if (!rawTasks) return [];
@@ -97,14 +96,14 @@ function cleanTaskList(rawTasks: any): string[] {
   return list
     .flatMap((item) => {
       if (typeof item === "string") {
-        const trimmed = item.trim();
+        let trimmed = item.trim();
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
           try {
             const parsed = JSON.parse(trimmed);
             if (Array.isArray(parsed)) return parsed;
           } catch {}
         }
-        return item.split(/\r?\n/);
+        return trimmed.split(/\r?\n+/);
       }
       return String(item);
     })
@@ -184,7 +183,6 @@ export default function PopUpDetail({
     touchEndX.current = null;
   };
 
-  // Normalisasi daftar role dan tugas
   const roleList: { role: string; tasks: string[] }[] = useMemo(() => {
     if (!company) return [];
 
@@ -199,10 +197,67 @@ export default function PopUpDetail({
       }));
     }
 
-    const defaultRoleTasks = cleanTaskList(company.tasks);
-    return ((company.roles as string[]) || ["Staff PKL"]).map((r) => ({
+    const rawRoles = company.roles;
+    let rolesArr: string[] = [];
+
+    if (Array.isArray(rawRoles)) {
+      rolesArr = rawRoles
+        .map((r) => (typeof r === "object" && r !== null && "role" in r ? (r as any).role : String(r)))
+        .filter(Boolean);
+    } else if (typeof rawRoles === "string") {
+      rolesArr = [rawRoles];
+    } else {
+      rolesArr = ["Staff PKL"];
+    }
+
+    if (rolesArr.length === 0) rolesArr = ["Staff PKL"];
+
+    const allTasks = cleanTaskList(company.tasks);
+
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    const findMatchingRoleIndex = (text: string) => {
+      const cleanT = norm(text);
+      if (!cleanT) return -1;
+      return rolesArr.findIndex((r) => {
+        const cleanR = norm(r);
+        return cleanT === cleanR || cleanT.startsWith(cleanR) || cleanR.startsWith(cleanT);
+      });
+    };
+
+    const groupedMap = new Map<string, string[]>();
+    rolesArr.forEach((r) => groupedMap.set(r, []));
+
+    let currentRole = rolesArr[0];
+
+    for (const item of allTasks) {
+      const matchIdx = findMatchingRoleIndex(item);
+      if (matchIdx !== -1) {
+        currentRole = rolesArr[matchIdx];
+        if (item.includes(":") && item.split(":")[1].trim().length > 0) {
+          const detail = item.split(":").slice(1).join(":").trim();
+          groupedMap.get(currentRole)?.push(detail);
+        }
+      } else {
+        groupedMap.get(currentRole)?.push(item);
+      }
+    }
+
+    const hasGroupedTasks = Array.from(groupedMap.values()).some((arr) => arr.length > 0);
+
+    if (hasGroupedTasks) {
+      return rolesArr.map((r) => ({
+        role: r,
+        tasks:
+          (groupedMap.get(r)?.length ?? 0) > 0
+            ? (groupedMap.get(r) as string[])
+            : ["Mengikuti arahan mentor dan penempatan unit kerja."],
+      }));
+    }
+
+    return rolesArr.map((r, idx) => ({
       role: r,
-      tasks: defaultRoleTasks,
+      tasks: allTasks[idx] ? [allTasks[idx]] : allTasks,
     }));
   }, [company]);
 
@@ -221,7 +276,7 @@ export default function PopUpDetail({
   const currentTasks =
     activeRoleData && activeRoleData.tasks.length > 0
       ? activeRoleData.tasks
-      : cleanTaskList(company.tasks);
+      : roleList[0]?.tasks || cleanTaskList(company.tasks);
 
   const cleanedRequirements = cleanTaskList(company.requirements);
   const cleanedFacilities = cleanTaskList(company.facilities);
@@ -498,58 +553,60 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Tombol Aksi: satu baris sejajar */}
-        <div className="flex flex-nowrap items-stretch gap-1.5 pt-2 sm:gap-2.5">
+        {/* Tombol Aksi: Terkunci 1 baris pas, tidak bisa digulir */}
+        <div className="grid grid-cols-5 gap-1 pt-2 sm:gap-2">
+          {/* Tombol Maps */}
           <a
             href={mapsHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl bg-[#182752] px-2 py-2.5 text-[10px] font-semibold text-white transition hover:bg-[#131f42] sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+            className="flex items-center justify-center gap-1 rounded-xl bg-[#182752] px-1 py-2 text-[10px] font-semibold text-white transition hover:bg-[#131f42] sm:px-3 sm:py-2.5 sm:text-xs"
           >
             <IkonPeta />
-            <span className="truncate">
-              <span className="sm:hidden">Maps</span>
-              <span className="hidden sm:inline">Buka Lokasi Google Maps</span>
-            </span>
+            <span>Maps</span>
           </a>
 
+          {/* Tombol Bandingkan */}
           <button
             type="button"
             onClick={() => onBandingkan && onBandingkan(company)}
-            className={`flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-[10px] font-semibold transition sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm ${
+            className={`flex cursor-pointer items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition sm:px-3 sm:py-2.5 sm:text-xs ${
               isComparing
                 ? "border border-blue-300 bg-blue-100 text-blue-700"
                 : "bg-gray-100 text-gray-800 hover:bg-gray-200"
             }`}
           >
             <IkonTimbangan />
-            {isComparing ? "Terpilih" : "Bandingkan"}
+            <span>{isComparing ? "Terpilih" : "Bandingkan"}</span>
           </button>
 
+          {/* Tombol Review */}
           <button
             type="button"
             onClick={() => setIsReviewOpen(true)}
-            className="flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-2 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm"
+            className="flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:px-3 sm:py-2.5 sm:text-xs"
           >
             <IkonReview />
-            Review
+            <span>Review</span>
           </button>
 
+          {/* Tombol Kontak */}
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
-            className="flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-2 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm"
+            className="flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:px-3 sm:py-2.5 sm:text-xs"
           >
             <IkonKontak />
-            Kontak
+            <span>Kontak</span>
           </button>
 
+          {/* Tombol Tutup */}
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 cursor-pointer rounded-xl bg-gray-200 px-2.5 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-300 sm:px-5 sm:py-3 sm:text-sm"
+            className="flex cursor-pointer items-center justify-center rounded-xl bg-gray-200 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-300 sm:px-3 sm:py-2.5 sm:text-xs"
           >
-            Tutup
+            <span>Tutup</span>
           </button>
         </div>
 
