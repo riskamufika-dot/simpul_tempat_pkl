@@ -48,7 +48,7 @@ export interface PopUpDetailProps {
 
 /* ---------- Ikon SVG ---------- */
 
-const ikonKelas = "h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4";
+const ikonKelas = "h-4 w-4 shrink-0 sm:h-4 sm:w-4";
 
 const IkonTimbangan = () => (
   <svg className={ikonKelas} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -553,60 +553,60 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Tombol Aksi: Terkunci 1 baris pas, tidak bisa digulir */}
-        <div className="grid grid-cols-5 gap-1 pt-2 sm:gap-2">
-          {/* Tombol Maps */}
+        {/* Tombol Aksi: Mobile (Ikon Atas, Teks Bawah) & Desktop (Ikon Samping, Teks Kanan) */}
+        <div className="grid grid-cols-5 gap-1 pt-2 border-t border-slate-100 sm:gap-2">
+          {/* Tombol 1: Maps */}
           <a
             href={mapsHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1 rounded-xl bg-[#182752] px-1 py-2 text-[10px] font-semibold text-white transition hover:bg-[#131f42] sm:px-3 sm:py-2.5 sm:text-xs"
+            className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl bg-[#182752] px-1 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-white transition hover:bg-[#131f42]"
           >
             <IkonPeta />
-            <span>Maps</span>
+            <span className="truncate">Maps</span>
           </a>
 
-          {/* Tombol Bandingkan */}
+          {/* Tombol 2: Bandingkan */}
           <button
             type="button"
             onClick={() => onBandingkan && onBandingkan(company)}
-            className={`flex cursor-pointer items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-semibold transition sm:px-3 sm:py-2.5 sm:text-xs ${
+            className={`flex flex-col sm:flex-row cursor-pointer items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl px-1 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-semibold transition ${
               isComparing
                 ? "border border-blue-300 bg-blue-100 text-blue-700"
                 : "bg-gray-100 text-gray-800 hover:bg-gray-200"
             }`}
           >
             <IkonTimbangan />
-            <span>{isComparing ? "Terpilih" : "Bandingkan"}</span>
+            <span className="truncate">{isComparing ? "Terpilih" : "Bandingkan"}</span>
           </button>
 
-          {/* Tombol Review */}
+          {/* Tombol 3: Review */}
           <button
             type="button"
             onClick={() => setIsReviewOpen(true)}
-            className="flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:px-3 sm:py-2.5 sm:text-xs"
+            className="flex flex-col sm:flex-row cursor-pointer items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl bg-gray-100 px-1 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-gray-800 transition hover:bg-gray-200"
           >
             <IkonReview />
-            <span>Review</span>
+            <span className="truncate">Review</span>
           </button>
 
-          {/* Tombol Kontak */}
+          {/* Tombol 4: Kontak */}
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
-            className="flex cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:px-3 sm:py-2.5 sm:text-xs"
+            className="flex flex-col sm:flex-row cursor-pointer items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl bg-gray-100 px-1 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-gray-800 transition hover:bg-gray-200"
           >
             <IkonKontak />
-            <span>Kontak</span>
+            <span className="truncate">Kontak</span>
           </button>
 
-          {/* Tombol Tutup */}
+          {/* Tombol 5: Tutup */}
           <button
             type="button"
             onClick={onClose}
-            className="flex cursor-pointer items-center justify-center rounded-xl bg-gray-200 px-1 py-2 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-300 sm:px-3 sm:py-2.5 sm:text-xs"
+            className="flex flex-col sm:flex-row cursor-pointer items-center justify-center rounded-xl bg-gray-200 px-1 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-gray-800 transition hover:bg-gray-300"
           >
-            <span>Tutup</span>
+            <span className="truncate">Tutup</span>
           </button>
         </div>
 
