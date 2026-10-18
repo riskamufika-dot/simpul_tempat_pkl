@@ -18,7 +18,7 @@ const stepsData: StepItem[] = [
     title: "Cari tempat PKL yang sesuai dengan minat Anda",
     description:
       "Gunakan kata kunci atau jelajahi daftar tempat yang tersedia. Pilih bidang yang Anda inginkan.",
-    imageSrc:"/images/langkah1.jpeg",
+    imageSrc: "/images/langkah1.jpeg",
     imageAlt: "Suasana kantor",
     reverse: false,
   },
@@ -28,7 +28,7 @@ const stepsData: StepItem[] = [
     title: "Baca detail lengkap setiap tempat PKL",
     description:
       "Lihat gambaran tempat, kegiatan, bidang, dan lokasi. Pahami apa yang akan Anda kerjakan.",
-    imageSrc:"/images/langkah2.jpeg",
+    imageSrc: "/images/langkah2.jpeg",
     imageAlt: "Detail laptop",
     reverse: true,
   },
@@ -38,7 +38,7 @@ const stepsData: StepItem[] = [
     title: "Bandingkan beberapa tempat PKL sekaligus",
     description:
       "Gunakan fitur perbandingan untuk melihat kelebihan dan kekurangan setiap tempat secara berdampingan.",
-    imageSrc:"/images/langkah3.jpeg",
+    imageSrc: "/images/langkah3.jpeg",
     imageAlt: "Ruang komputer",
     reverse: false,
   },
@@ -48,7 +48,7 @@ const stepsData: StepItem[] = [
     title: "Tentukan tempat PKL yang paling sesuai",
     description:
       "Setelah membandingkan, pilih tempat yang paling cocok dengan minat dan kebutuhan Anda. Siapkan dokumen.",
-    imageSrc:"/images/langkah4.jpeg",
+    imageSrc: "/images/langkah4.jpeg",
     imageAlt: "Memilih tempat",
     reverse: true,
   },
@@ -57,11 +57,15 @@ const stepsData: StepItem[] = [
 export default function StepsSection() {
   return (
     <section className="bg-white py-20 px-6 sm:px-10 lg:px-16 text-gray-900 w-full overflow-hidden">
-      <div className="max-w-6xl mx-auto space-y-24">
-        <div className="text-center">
-          <span className="text-l font-semibold text-gray-500 tracking-wider">
-            Baca Dulu Sebelum Mencari
-          </span>
+      <div className="max-w-6xl mx-auto space-y-16 sm:space-y-24">
+        {/* Header Bagian Panduan */}
+        <div className="text-center max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight text-blue-950 leading-tight whitespace-normal sm:whitespace-nowrap">
+            Panduan Menemukan Tempat PKL
+          </h2>
+          <p className="mt-2.5 text-xs sm:text-sm text-gray-500 font-normal leading-relaxed max-w-xl mx-auto">
+            Ikuti langkah praktis berikut untuk menemukan tempat magang terbaik sesuai keahlian Anda
+          </p>
         </div>
 
         <div className="space-y-20 sm:space-y-28">
