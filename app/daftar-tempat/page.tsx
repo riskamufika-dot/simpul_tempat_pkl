@@ -197,7 +197,7 @@ function DaftarTempatContent() {
         gambar={heroImages}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8">
         {/* Bar filter */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
           <FilterTempat
@@ -216,7 +216,7 @@ function DaftarTempatContent() {
 
         {/* Daftar kartu */}
         {loading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <PlaceSkeleton key={i} />
             ))}
@@ -228,7 +228,7 @@ function DaftarTempatContent() {
               : "Tidak ada tempat PKL yang cocok dengan filter yang dipilih."}
           </div>
         ) : (
-          <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+          <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-5 lg:grid-cols-3 lg:gap-6">
             {hasilFilter.map((item) => (
               <KartuTempatPKL
                 key={item.id}

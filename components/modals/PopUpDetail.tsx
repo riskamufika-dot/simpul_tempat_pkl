@@ -42,10 +42,54 @@ export interface PopUpDetailProps {
   onClose: () => void;
   company: CompanyDetail | null;
   isComparing?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onBandingkan?: (company: CompanyDetail | any) => void;
 }
 
-// Helper pembersih format teks list (menghapus tanda petik, kurung siku, dan bullet berlebih)
+/* ---------- Ikon SVG (warna mengikuti teks, sama di semua perangkat) ---------- */
+
+const ikonKelas = "h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4";
+
+const IkonTimbangan = () => (
+  <svg className={ikonKelas} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+  </svg>
+);
+
+const IkonReview = () => (
+  <svg className={ikonKelas} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h5m-9 6l3-3h10a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v14z" />
+  </svg>
+);
+
+const IkonKontak = () => (
+  <svg className={ikonKelas} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+const IkonPeta = () => (
+  <svg className={ikonKelas} fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+  </svg>
+);
+
+const IkonDokumen = () => (
+  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const IkonFasilitas = () => (
+  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+/* ---------- Helper ---------- */
+
+// Membersihkan format teks list (tanda petik, kurung siku, bullet berlebih)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanTaskList(rawTasks: any): string[] {
   if (!rawTasks) return [];
   const list = Array.isArray(rawTasks) ? rawTasks : [rawTasks];
@@ -68,12 +112,14 @@ function cleanTaskList(rawTasks: any): string[] {
       s
         .trim()
         .replace(/^[-•*]\s*/, "")
-        .replace(/^\d+[\.\)]\s*/, "")
+        .replace(/^\d+[.)]\s*/, "")
         .replace(/^["'](.*)["']$/, "$1")
         .trim()
     )
     .filter((s: string) => s.length > 0 && s !== "[" && s !== "]");
 }
+
+/* ---------- Komponen ---------- */
 
 export default function PopUpDetail({
   isOpen,
@@ -171,7 +217,6 @@ export default function PopUpDetail({
 
   if (!isOpen || !company) return null;
 
-  // Tugas yang sedang aktif mengikuti tombol role yang diklik
   const activeRoleData = roleList.find((r) => r.role === selectedRole);
   const currentTasks =
     activeRoleData && activeRoleData.tasks.length > 0
@@ -215,12 +260,18 @@ export default function PopUpDetail({
         setPesanReview("");
         setReviewSuccess(false);
       }, 1800);
-    } catch (err: any) {
-      setReviewError(err.message || "Terjadi kesalahan.");
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : "Terjadi kesalahan.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const mapsHref =
+    company.mapsUrl ||
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      company.name + " " + company.address
+    )}`;
 
   return (
     <div
@@ -234,6 +285,7 @@ export default function PopUpDetail({
         <button
           type="button"
           onClick={onClose}
+          aria-label="Tutup"
           className="absolute top-4 right-4 z-20 text-gray-700 bg-white/90 hover:bg-white w-9 h-9 rounded-full flex items-center justify-center shadow-md transition text-lg cursor-pointer"
         >
           ✕
@@ -247,7 +299,7 @@ export default function PopUpDetail({
           onMouseDown={handleTouchStart}
           onMouseMove={handleTouchMove}
           onMouseUp={handleTouchEnd}
-          className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-6 bg-gray-100 select-none cursor-pointer"
+          className="relative w-full h-52 sm:h-72 rounded-2xl overflow-hidden mb-5 sm:mb-6 bg-gray-100 select-none cursor-pointer"
         >
           <Image
             src={imageList[currentSlide] || company.imageSrc}
@@ -256,35 +308,28 @@ export default function PopUpDetail({
             sizes="(max-width: 1024px) 100vw, 896px"
             className="object-cover transition-opacity duration-500 ease-in-out"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-5 sm:p-7 text-white pointer-events-none">
-            <span className="bg-[#dbeafe] text-[#2563eb] text-xs font-semibold px-3.5 py-1 rounded-full w-fit mb-2 shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent flex flex-col justify-end p-4 sm:p-7 text-white pointer-events-none">
+            <span className="bg-[#dbeafe] text-[#2563eb] text-[10px] sm:text-xs font-semibold px-3 py-1 rounded-full w-fit mb-2 shadow-sm">
               {company.category}
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+            <h2 className="text-xl sm:text-4xl font-extrabold tracking-tight leading-tight">
               {company.name}
             </h2>
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-200 mt-1">
-              <svg
-                className="w-4 h-4 text-red-500 shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
-                />
+            <div className="flex items-start gap-1.5 text-[11px] sm:text-sm text-gray-200 mt-1">
+              <svg className="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
-              <span>{company.address}</span>
+              <span className="line-clamp-2">{company.address}</span>
             </div>
           </div>
 
           {imageList.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full">
+            <div className="absolute top-3 left-3 flex items-center gap-2 z-10 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full">
               {imageList.map((_, i) => (
                 <button
                   key={i}
                   type="button"
+                  aria-label={`Foto ${i + 1}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setCurrentSlide(i);
@@ -299,22 +344,22 @@ export default function PopUpDetail({
         </div>
 
         {/* Jam Kerja & Kuota Siswa */}
-        <div className="grid grid-cols-2 bg-[#f0f5ff] rounded-2xl p-4 sm:p-5 mb-6 text-center border border-blue-50">
-          <div className="border-r border-blue-200 pr-3 flex flex-col justify-center">
-            <span className="text-[11px] font-bold text-gray-500 tracking-wider uppercase block mb-1">
+        <div className="grid grid-cols-2 bg-[#f0f5ff] rounded-2xl p-3 sm:p-5 mb-5 sm:mb-6 text-center border border-blue-50">
+          <div className="border-r border-blue-200 pr-2 sm:pr-3 flex flex-col justify-center">
+            <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 tracking-wider uppercase block mb-1">
               JAM KERJA
             </span>
-            <p className="text-xs sm:text-sm font-semibold text-gray-800">
+            <p className="text-[11px] sm:text-sm font-semibold text-gray-800">
               {company.workHours.shift1}
             </p>
             {company.workHours.shift2 && (
-              <p className="text-xs sm:text-sm font-semibold text-gray-800">
+              <p className="text-[11px] sm:text-sm font-semibold text-gray-800">
                 {company.workHours.shift2}
               </p>
             )}
           </div>
-          <div className="pl-3 flex flex-col justify-center">
-            <span className="text-[11px] font-bold text-gray-500 tracking-wider uppercase block mb-1">
+          <div className="pl-2 sm:pl-3 flex flex-col justify-center">
+            <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 tracking-wider uppercase block mb-1">
               KUOTA SISWA
             </span>
             <p className="text-sm sm:text-base font-extrabold text-gray-900">
@@ -325,17 +370,17 @@ export default function PopUpDetail({
 
         {/* Role Yang Dibutuhkan */}
         {roleList.length > 0 && (
-          <div className="mb-6">
-            <h4 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-3">
+          <div className="mb-5 sm:mb-6">
+            <h4 className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase mb-3">
               ROLE YANG DIBUTUHKAN:
             </h4>
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2 sm:gap-2.5">
               {roleList.map((r, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setSelectedRole(r.role)}
-                  className={`px-6 py-2 rounded-full border text-sm font-semibold transition cursor-pointer ${
+                  className={`px-4 sm:px-6 py-1.5 sm:py-2 rounded-full border text-xs sm:text-sm font-semibold transition cursor-pointer ${
                     selectedRole === r.role
                       ? "border-[#2563eb] text-[#2563eb] bg-[#eff6ff] shadow-sm ring-1 ring-blue-500"
                       : "border-blue-400 text-blue-600 bg-white hover:bg-blue-50"
@@ -348,17 +393,17 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Hal Perlu Dikerjakan (Daftar Rapi Bernomor) */}
-        <div className="mb-6">
-          <h4 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-3.5 flex items-center gap-1.5">
+        {/* Hal Perlu Dikerjakan */}
+        <div className="mb-5 sm:mb-6">
+          <h4 className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase mb-3">
             HAL PERLU DIKERJAKAN:
           </h4>
           {currentTasks.length > 0 ? (
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {currentTasks.map((task, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2.5 text-xs sm:text-sm text-gray-700 leading-relaxed"
+                  className="flex items-start gap-2 text-xs sm:text-sm text-gray-700 leading-relaxed"
                 >
                   <span className="font-semibold text-gray-900 select-none shrink-0 w-5">
                     {idx + 1}.
@@ -374,11 +419,11 @@ export default function PopUpDetail({
           )}
         </div>
 
-        {/* Syarat Berkas & Fasilitas (Format List Sejajar) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-[#f3f7fd] p-5 rounded-2xl border border-blue-50/60">
-            <h4 className="text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
-              <span className="text-sm">📄</span> SYARAT BERKAS:
+        {/* Syarat Berkas & Fasilitas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-5 sm:mb-6">
+          <div className="bg-[#f3f7fd] p-4 sm:p-5 rounded-2xl border border-blue-50/60">
+            <h4 className="text-[11px] sm:text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
+              <IkonDokumen /> SYARAT BERKAS:
             </h4>
             <div className="space-y-2">
               {cleanedRequirements.length > 0 ? (
@@ -401,9 +446,9 @@ export default function PopUpDetail({
             </div>
           </div>
 
-          <div className="bg-[#f3f7fd] p-5 rounded-2xl border border-blue-50/60">
-            <h4 className="text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
-              <span className="text-sm">✨</span> FASILITAS:
+          <div className="bg-[#f3f7fd] p-4 sm:p-5 rounded-2xl border border-blue-50/60">
+            <h4 className="text-[11px] sm:text-xs font-bold text-gray-900 tracking-wider uppercase mb-3 flex items-center gap-2">
+              <IkonFasilitas /> FASILITAS:
             </h4>
             <div className="space-y-2">
               {cleanedFacilities.length > 0 ? (
@@ -429,18 +474,14 @@ export default function PopUpDetail({
 
         {/* Testimoni Siswa */}
         {company.testimonial && company.testimonial.feedback && (
-          <div className="bg-[#f0f6ff] p-5 sm:p-6 rounded-2xl border border-blue-100 mb-6">
-            <div className="flex items-center gap-3.5 mb-2.5">
-              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+          <div className="bg-[#f0f6ff] p-4 sm:p-6 rounded-2xl border border-blue-100 mb-5 sm:mb-6">
+            <div className="flex items-center gap-3 mb-2.5">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="text-sm">
+              <div className="text-xs sm:text-sm">
                 <span className="font-bold text-slate-900">
                   {company.testimonial.studentName}{" "}
                 </span>
@@ -457,54 +498,56 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Tombol Aksi */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2">
+        {/* Tombol Aksi: satu baris sejajar */}
+        <div className="flex flex-nowrap items-stretch gap-1.5 pt-2 sm:gap-2.5">
           <a
-            href={
-              company.mapsUrl ||
-              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                company.name + " " + company.address
-              )}`
-            }
+            href={mapsHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 min-w-[170px] bg-[#182752] hover:bg-[#131f42] text-white text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl bg-[#182752] px-2 py-2.5 text-[10px] font-semibold text-white transition hover:bg-[#131f42] sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
           >
-            Buka Lokasi Google Maps
+            <IkonPeta />
+            <span className="truncate">
+              <span className="sm:hidden">Maps</span>
+              <span className="hidden sm:inline">Buka Lokasi Google Maps</span>
+            </span>
           </a>
 
           <button
             type="button"
             onClick={() => onBandingkan && onBandingkan(company)}
-            className={`text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl flex items-center gap-1.5 transition cursor-pointer ${
+            className={`flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-[10px] font-semibold transition sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm ${
               isComparing
-                ? "bg-blue-100 text-blue-700 border border-blue-300"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                ? "border border-blue-300 bg-blue-100 text-blue-700"
+                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
             }`}
           >
-            ⚖️ {isComparing ? "Terpilih" : "Bandingkan"}
+            <IkonTimbangan />
+            {isComparing ? "Terpilih" : "Bandingkan"}
           </button>
 
           <button
             type="button"
             onClick={() => setIsReviewOpen(true)}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl transition cursor-pointer"
+            className="flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-2 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm"
           >
-            💬 Review
+            <IkonReview />
+            Review
           </button>
 
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-4 rounded-xl transition cursor-pointer"
+            className="flex shrink-0 cursor-pointer items-center justify-center gap-1 rounded-xl bg-gray-100 px-2 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-200 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-sm"
           >
-            👤 Kontak
+            <IkonKontak />
+            Kontak
           </button>
 
           <button
             type="button"
             onClick={onClose}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs sm:text-sm font-semibold py-3 px-5 rounded-xl transition cursor-pointer"
+            className="shrink-0 cursor-pointer rounded-xl bg-gray-200 px-2.5 py-2.5 text-[10px] font-semibold text-gray-800 transition hover:bg-gray-300 sm:px-5 sm:py-3 sm:text-sm"
           >
             Tutup
           </button>
@@ -517,19 +560,19 @@ export default function PopUpDetail({
             onClick={() => setIsReviewOpen(false)}
           >
             <div
-              className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative"
+              className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl relative max-h-[92vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-1">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
                 Tulis Review Pengalaman PKL
               </h3>
               <p className="text-xs text-gray-500 mb-5">
-                Review kamu akan ditinjau oleh pihak sekolah/admin sebelum dipublikasikan[cite: 8].
+                Review kamu akan ditinjau oleh pihak sekolah/admin sebelum dipublikasikan.
               </p>
 
               {reviewSuccess ? (
                 <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-2xl text-center text-sm font-medium">
-                  🎉 Terima kasih! Review berhasil dikirim dan menunggu moderasi admin[cite: 8].
+                  Terima kasih! Review berhasil dikirim dan menunggu moderasi admin.
                 </div>
               ) : (
                 <form onSubmit={handleSubmitReview} className="space-y-4">
@@ -564,7 +607,7 @@ export default function PopUpDetail({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-gray-600 mb-1">
                         Asal Sekolah *
@@ -595,7 +638,7 @@ export default function PopUpDetail({
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">
-                      Pengalaman & Ulasan *
+                      Pengalaman &amp; Ulasan *
                     </label>
                     <textarea
                       required
@@ -636,13 +679,14 @@ export default function PopUpDetail({
             onClick={() => setIsContactOpen(false)}
           >
             <div
-              className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative"
+              className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl relative"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-900">Kontak Narahubung</h3>
                 <button
                   type="button"
+                  aria-label="Tutup kontak"
                   onClick={() => setIsContactOpen(false)}
                   className="text-gray-400 hover:text-gray-600 font-bold"
                 >
@@ -665,8 +709,9 @@ export default function PopUpDetail({
                 </div>
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <span className="text-xs text-gray-500">Email:</span>
-                  <p className="font-semibold text-gray-800">
-                    {company.contacts?.email || `pkl@${company.name.toLowerCase().replace(/\s+/g, "")}.co.id`}
+                  <p className="font-semibold text-gray-800 break-all">
+                    {company.contacts?.email ||
+                      `pkl@${company.name.toLowerCase().replace(/\s+/g, "")}.co.id`}
                   </p>
                 </div>
               </div>
