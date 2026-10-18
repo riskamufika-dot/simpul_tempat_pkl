@@ -71,11 +71,11 @@ export default function KategoriJurusan() {
           {dataJurusan.map((item) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-slate-900 shadow-xl hover:shadow-2xl sm:hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+              className="aspect-square sm:aspect-auto bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-slate-900 shadow-xl hover:shadow-2xl sm:hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
             >
               <div>
                 <div className="flex justify-center mb-3 sm:mb-6">
-                  <div className="relative w-16 h-16 sm:w-24 sm:h-24 lg:w-28 lg:h-28 drop-shadow-md">
+                  <div className="relative w-12 h-12 sm:w-24 sm:h-24 lg:w-28 lg:h-28 drop-shadow-md">
                     <Image
                       src={item.imageSrc}
                       alt={item.name}
@@ -92,11 +92,11 @@ export default function KategoriJurusan() {
                   </span>
                 </div>
 
-                <h3 className="text-left font-bold text-xs sm:text-lg text-gray-900 leading-snug mb-1.5 sm:mb-2 min-h-[48px] sm:min-h-[52px]">
+                <h3 className="text-left font-bold text-[11px] sm:text-lg text-gray-900 leading-snug mb-1.5 sm:mb-2 line-clamp-2 sm:line-clamp-none sm:min-h-[52px]">
                   {item.name}
                 </h3>
 
-                <p className="text-left text-gray-500 text-[10px] sm:text-xs leading-relaxed mb-4 sm:mb-6 font-normal line-clamp-3">
+                <p className="text-left text-gray-500 text-[10px] sm:text-xs leading-relaxed mb-2 sm:mb-6 font-normal line-clamp-2 sm:line-clamp-3">
                   {item.description}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function KategoriJurusan() {
               <div>
                 <Link
                   href={`/daftar-tempat?jurusan=${encodeURIComponent(item.queryFilter)}`}
-                  className="w-full bg-[#1c3879] hover:bg-[#162d61] text-white text-xs sm:text-sm font-semibold py-2 sm:py-2.5 rounded-xl block text-center transition shadow-sm cursor-pointer"
+                  className="w-full bg-[#1c3879] hover:bg-[#162d61] text-white text-xs sm:text-sm font-semibold py-1.5 sm:py-2.5 rounded-xl block text-center transition shadow-sm cursor-pointer"
                 >
                   Lihat
                 </Link>

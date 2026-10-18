@@ -101,7 +101,7 @@ export default function Testimonial() {
             {testimonials.map((item) => (
               <div
                 key={item.id}
-                className="snap-start shrink-0 basis-[calc(50%-8px)] border border-gray-300 rounded-2xl p-4 sm:p-8 flex flex-col min-h-[200px] sm:min-h-[240px] bg-white shadow-sm"
+                className="snap-start shrink-0 grow-0 basis-[calc(50%-8px)] w-[calc(50%-8px)] min-w-0 max-w-[calc(50%-8px)] border border-gray-300 rounded-2xl p-4 sm:p-8 flex flex-col h-[220px] sm:h-[260px] bg-white shadow-sm overflow-hidden"
               >
                 <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
@@ -115,9 +115,9 @@ export default function Testimonial() {
                   </div>
                 </div>
 
-                <p className="text-gray-700 text-[11px] sm:text-sm leading-relaxed font-normal">
-                  {item.feedback}
-                </p>
+                <p className="text-gray-700 text-[11px] sm:text-sm leading-relaxed font-normal line-clamp-6 sm:line-clamp-5 break-words">
+  {item.feedback}
+</p>
               </div>
             ))}
           </div>

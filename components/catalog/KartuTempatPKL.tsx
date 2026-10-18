@@ -46,23 +46,30 @@ export default function KartuTempatPKL({ tempat, dipilih, onDetail, onBandingkan
           {tempat.deskripsi}
         </p>
 
-        {/* mt-auto: tombol selalu menempel di dasar kartu */}
-        <div className="mt-auto flex flex-col gap-1.5 pt-3 sm:flex-row sm:gap-2 sm:pt-4">
+        {/* mt-auto: tombol selalu menempel di dasar kartu, berdampingan di semua layar */}
+        <div className="mt-auto flex flex-row gap-1.5 pt-3 sm:gap-2 sm:pt-4">
           <button
             onClick={() => onDetail(tempat)}
-            className="flex-1 whitespace-nowrap rounded-full bg-gray-100 px-2 py-1.5 text-[11px] font-medium text-gray-700 transition hover:bg-gray-200 sm:py-2 sm:text-xs"
+            className="min-w-0 flex-1 whitespace-nowrap rounded-full bg-gray-100 px-1 py-1.5 text-[10px] font-medium text-gray-700 transition hover:bg-gray-200 sm:px-2 sm:py-2 sm:text-xs"
           >
             Detail
           </button>
           <button
             onClick={() => onBandingkan(tempat)}
-            className={`flex-1 whitespace-nowrap rounded-full px-2 py-1.5 text-[11px] font-medium transition sm:py-2 sm:text-xs ${
+            className={`min-w-0 flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[10px] font-medium transition sm:px-2 sm:py-2 sm:text-xs ${
               dipilih
                 ? "bg-[#101d42] text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            {dipilih ? "✓ Dipilih" : "+ Bandingkan"}
+            {dipilih ? (
+              "✓ Dipilih"
+            ) : (
+              <>
+                +<span className="hidden min-[400px]:inline"> Bandingkan</span>
+                <span className="min-[400px]:hidden"> Banding</span>
+              </>
+            )}
           </button>
         </div>
       </div>

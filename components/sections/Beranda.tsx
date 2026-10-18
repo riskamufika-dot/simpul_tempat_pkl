@@ -58,7 +58,7 @@ export default function HeroSection() {
   const heroImage = currentSlider?.image?.url || currentSlider?.image_url;
 
   return (
-   <section className="relative flex min-h-[340px] w-full items-center overflow-hidden bg-white sm:min-h-[400px] md:min-h-[520px]">
+   <section className="relative flex min-h-[260px] w-full items-center overflow-hidden bg-white sm:min-h-[340px] lg:min-h-[380px]">
       {/* Foto: blok di atas (HP), latar penuh (tablet ke atas) */}
       {heroImage && (
        <div className="pointer-events-none absolute inset-0 z-0 select-none">
@@ -76,7 +76,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 z-[1] bg-linear-to-r from-white/95 via-white/70 to-white/10 md:hidden" />
 
       {/* Teks & pencarian */}
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 md:py-20 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
   <div className="max-w-[16rem] space-y-3 text-left sm:max-w-xl sm:space-y-6">
           <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50/90 px-3 py-1 shadow-xs sm:px-4 sm:py-1.5">
             <span className="text-[11px] font-semibold tracking-wide text-blue-600 sm:text-xs">
@@ -85,7 +85,7 @@ export default function HeroSection() {
           </div>
 
           <div className="space-y-2 sm:space-y-3">
-            <h1 className="text-xl font-extrabold leading-tight tracking-tight text-[#182752] sm:text-4xl md:text-5xl md:leading-[1.18]">
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight text-[#182752] sm:text-3xl lg:text-4xl">
               {currentSlider?.title || 'Temukan tempat PKL'}
             </h1>
             <p className="max-w-lg text-[11px] font-medium leading-relaxed text-slate-600 sm:text-sm md:text-base">
@@ -125,7 +125,7 @@ export default function HeroSection() {
 
       {/* Titik slider */}
       {sliders.length > 1 && (
-        <div className="absolute left-1/2 top-48 z-20 flex -translate-x-1/2 items-center justify-center gap-2 sm:top-64 md:bottom-4 md:top-auto">
+        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center justify-center gap-2">
           {sliders.map((_, idx) => (
             <button
               key={idx}
