@@ -21,12 +21,9 @@ export default function HeaderDaftarTempat({ kata, onKata, onCari, gambar = [] }
     return () => clearInterval(t);
   }, [jumlah]);
 
-  const sebelumnya = () => setAktif((idx - 1 + jumlah) % jumlah);
-  const berikutnya = () => setAktif((idx + 1) % jumlah);
-
   return (
     <section className="w-full bg-white">
-  <div className="relative flex min-h-[300px] w-full items-center overflow-hidden bg-[#101d42] sm:min-h-[340px] lg:min-h-[380px]">
+      <div className="relative flex min-h-[300px] w-full items-center overflow-hidden bg-[#101d42] sm:min-h-[340px] lg:min-h-[380px]">
         {/* Foto latar dari database */}
         {gambar.map((src, i) => (
           // eslint-disable-next-line @next/next/no-img-element
@@ -45,7 +42,7 @@ export default function HeaderDaftarTempat({ kata, onKata, onCari, gambar = [] }
 
         {/* Isi, rata kiri */}
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-8 sm:px-10 lg:px-16 xl:px-24">
-         <h1 className="max-w-3xl text-2xl font-extrabold leading-tight text-white sm:text-3xl lg:text-4xl">
+          <h1 className="max-w-3xl text-2xl font-extrabold leading-tight text-white sm:text-3xl lg:text-4xl">
             Cari &amp; Bandingkan Tempat PKL{" "}
             <span className="block text-blue-400">Sesuai Kompetensi Jurusanmu</span>
           </h1>
@@ -85,37 +82,20 @@ export default function HeaderDaftarTempat({ kata, onKata, onCari, gambar = [] }
           </div>
         </div>
 
-        {/* Panah dan titik, hanya muncul kalau foto lebih dari 1 */}
+        {/* Titik indikator di tengah bawah, hanya muncul kalau foto lebih dari 1 */}
         {jumlah > 1 && (
-          <>
-            <button
-              onClick={sebelumnya}
-              aria-label="Foto sebelumnya"
-              className="absolute left-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white"
-            >
-              ‹
-            </button>
-            <button
-              onClick={berikutnya}
-              aria-label="Foto berikutnya"
-              className="absolute right-3 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white"
-            >
-              ›
-            </button>
-
-            <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-              {gambar.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setAktif(i)}
-                  aria-label={`Foto ${i + 1}`}
-                  className={`h-2 rounded-full transition-all ${
-                    i === idx ? "w-5 bg-white" : "w-2 bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-          </>
+          <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+            {gambar.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setAktif(i)}
+                aria-label={`Foto ${i + 1}`}
+                className={`h-2 rounded-full transition-all ${
+                  i === idx ? "w-5 bg-white" : "w-2 bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
         )}
       </div>
     </section>

@@ -25,7 +25,7 @@ export default function HeroSection() {
       try {
         const data = await getHeroSliders();
         if (Array.isArray(data) && data.length > 0) {
-          // Ambil hanya slide milik Beranda (sort_order = 1)
+          // Ambil hanya slide yang dialokasikan untuk Beranda (sort_order = 1)
           const homeSlides = data.filter((s: any) => Number(s.sort_order) === 1);
           setSliders(homeSlides.length > 0 ? homeSlides : data);
         }
@@ -57,22 +57,22 @@ export default function HeroSection() {
   const heroImage = currentSlider?.image?.url || currentSlider?.image_url;
 
   return (
-    <section className="relative w-full min-h-[460px] md:min-h-[520px] flex items-center overflow-hidden bg-white">
-      {/* Gambar Asli dari Database Strapi */}
+    <section className="relative w-full h-[420px] sm:h-[460px] md:h-[500px] flex items-center overflow-hidden bg-white">
+      {/* Background Banner Image dari Strapi: Membentang penuh tanpa zoom berlebih */}
       {heroImage && (
-        <div className="absolute inset-0 z-0 pointer-events-none select-none">
+        <div className="absolute inset-0 pointer-events-none select-none z-0">
           <Image
             src={heroImage}
-            alt={currentSlider?.title || 'Latar Belakang Beranda'}
+            alt={currentSlider?.title || 'Banner SIMPUL'}
             fill
-            className="object-cover object-center transition-all duration-700 ease-in-out"
+            className="object-cover object-right md:object-[right_center] transition-all duration-700 ease-in-out"
             priority
           />
         </div>
       )}
 
-      {/* Konten Teks & Form Pencarian */}
-      <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      {/* Konten Teks & Form Pencarian di Sisi Kiri */}
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl text-left space-y-6">
           {/* Badge Tag */}
           <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 shadow-xs">
@@ -84,33 +84,26 @@ export default function HeroSection() {
           {/* Judul & Deskripsi */}
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#182752] tracking-tight leading-[1.18]">
-              {currentSlider?.title || 'Temukan tempat PKL'}
+              {currentSlider?.title || 'Cari Info Tempat PKL'}
             </h1>
             <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-lg font-medium">
               {currentSlider?.subtitle ||
-                'Pusat informasi lengkap untuk membantu siswa menemukan tempat PKL yang sesuai minat dan kebutuhan'}
+                'Temukan informasi tempat pkl yang anda ingin ketahui'}
             </p>
           </div>
 
           {/* Form Pencarian */}
           <form onSubmit={handleSearch} className="pt-2 flex items-center gap-2 max-w-md">
             <div className="relative flex-1">
-              {/* Icon PNG Pengganti Emoji */}
-              <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                <Image
-                  src="/icons/searchabu.png"
-                  alt="Cari"
-                  width={18}
-                  height={18}
-                  className="object-contain"
-                />
-              </div>
+              <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 text-xs">
+                🔍
+              </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama tempat, jurusan..."
-                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm text-slate-800 placeholder-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm"
               />
             </div>
             <button
@@ -123,7 +116,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Indikator Titik Slider */}
+      {/* Indikator Titik Slider di Bagian Tengah Bawah */}
       {sliders.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2">
           {sliders.map((_, idx) => (
