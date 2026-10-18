@@ -115,12 +115,16 @@ export default function Navbar(_props: NavbarProps) {
             className="flex items-center gap-1.5 rounded-full border border-white/80 px-2.5 py-1.5 text-xs md:hidden"
             aria-label="Buka perbandingan"
           >
-            ⚖️
-            <span className="rounded-full border border-white/80 px-1.5 text-[10px]">
-              {compareCount}/2
-            </span>
+            <img 
+            src="/icons/banding.png" 
+            alt="Bandingkan" 
+            className="h-3.5 w-3.5 object-contain" 
+          />
+          <span className="rounded-full border border-white/80 px-1.5 text-[10px]">
+          {compareCount}/2
+          </span>
           </button>
-
+          
           <button
             onClick={() => setOpen(true)}
             className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-white/10 md:hidden"
