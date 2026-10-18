@@ -657,7 +657,6 @@ export default function PopUpDetail({
                     <input
                       type="text"
                       required
-                      placeholder="Contoh: Riska Mufika"
                       value={namaReviewer}
                       onChange={(e) => setNamaReviewer(e.target.value)}
                       className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -672,7 +671,6 @@ export default function PopUpDetail({
                       <input
                         type="text"
                         required
-                        placeholder="Contoh: SMKN 2 Sumedang"
                         value={asalSekolah}
                         onChange={(e) => setAsalSekolah(e.target.value)}
                         className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -685,7 +683,6 @@ export default function PopUpDetail({
                       <input
                         type="text"
                         required
-                        placeholder="Contoh: RPL"
                         value={jurusanReviewer}
                         onChange={(e) => setJurusanReviewer(e.target.value)}
                         className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -700,7 +697,6 @@ export default function PopUpDetail({
                     <textarea
                       required
                       rows={3}
-                      placeholder="Ceritakan suasana kerja dan bimbingan selama PKL..."
                       value={pesanReview}
                       onChange={(e) => setPesanReview(e.target.value)}
                       className="w-full border border-gray-300 rounded-xl p-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
