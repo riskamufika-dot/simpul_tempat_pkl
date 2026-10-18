@@ -8,12 +8,12 @@ interface Props {
 }
 
 const selectClass =
-  "w-full appearance-none rounded-xl bg-white py-3 pl-4 pr-12 text-sm text-gray-800 shadow-sm outline-none focus:ring-2 focus:ring-blue-400 sm:text-base";
+  "w-full min-w-0 appearance-none truncate rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-8 text-xs text-gray-800 shadow-sm outline-none focus:ring-2 focus:ring-blue-400 sm:py-3 sm:pl-4 sm:pr-12 sm:text-base";
 
 function Panah() {
   return (
     <svg
-      className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600"
+      className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-600 sm:right-5 sm:h-4 sm:w-4"
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -27,11 +27,11 @@ function Panah() {
 
 export default function FilterTempat(p: Props) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-      <span className="text-lg font-semibold text-white sm:text-xl">Filter:</span>
+    <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 lg:w-auto">
+      <span className="text-sm font-semibold text-slate-800 sm:text-xl">Filter:</span>
 
-      <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:max-w-3xl">
-        <div className="relative">
+      <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-4 lg:w-[44rem] lg:flex-none">
+        <div className="relative min-w-0">
           <select
             value={p.bidang}
             onChange={(e) => p.onBidang(e.target.value)}
@@ -46,7 +46,7 @@ export default function FilterTempat(p: Props) {
           <Panah />
         </div>
 
-        <div className="relative">
+        <div className="relative min-w-0">
           <select
             value={p.jurusan}
             onChange={(e) => p.onJurusan(e.target.value)}

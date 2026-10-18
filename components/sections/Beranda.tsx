@@ -26,6 +26,7 @@ export default function HeroSection() {
         const data = await getHeroSliders();
         if (Array.isArray(data) && data.length > 0) {
           // Ambil hanya slide milik Beranda (sort_order = 1)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const homeSlides = data.filter((s: any) => Number(s.sort_order) === 1);
           setSliders(homeSlides.length > 0 ? homeSlides : data);
         }
@@ -57,46 +58,45 @@ export default function HeroSection() {
   const heroImage = currentSlider?.image?.url || currentSlider?.image_url;
 
   return (
-    <section className="relative w-full min-h-[460px] md:min-h-[520px] flex items-center overflow-hidden bg-white">
-      {/* Gambar Asli dari Database Strapi */}
+   <section className="relative flex min-h-[340px] w-full items-center overflow-hidden bg-white sm:min-h-[400px] md:min-h-[520px]">
+      {/* Foto: blok di atas (HP), latar penuh (tablet ke atas) */}
       {heroImage && (
-        <div className="absolute inset-0 z-0 pointer-events-none select-none">
+       <div className="pointer-events-none absolute inset-0 z-0 select-none">
           <Image
             src={heroImage}
             alt={currentSlider?.title || 'Latar Belakang Beranda'}
             fill
-            className="object-cover object-center transition-all duration-700 ease-in-out"
+            sizes="100vw"
+           className="object-cover object-[75%_center] transition-all duration-700 ease-in-out md:object-center"
             priority
           />
         </div>
       )}
 
-      {/* Konten Teks & Form Pencarian */}
-      <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        <div className="max-w-xl text-left space-y-6">
-          {/* Badge Tag */}
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-100 shadow-xs">
-            <span className="text-xs font-semibold text-blue-600 tracking-wide">
+      <div className="absolute inset-0 z-[1] bg-linear-to-r from-white/95 via-white/70 to-white/10 md:hidden" />
+
+      {/* Teks & pencarian */}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 md:py-20 lg:px-8">
+  <div className="max-w-[16rem] space-y-3 text-left sm:max-w-xl sm:space-y-6">
+          <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50/90 px-3 py-1 shadow-xs sm:px-4 sm:py-1.5">
+            <span className="text-[11px] font-semibold tracking-wide text-blue-600 sm:text-xs">
               Temukan Tempat PKL Terbaik
             </span>
           </div>
 
-          {/* Judul & Deskripsi */}
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#182752] tracking-tight leading-[1.18]">
+          <div className="space-y-2 sm:space-y-3">
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight text-[#182752] sm:text-4xl md:text-5xl md:leading-[1.18]">
               {currentSlider?.title || 'Temukan tempat PKL'}
             </h1>
-            <p className="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-lg font-medium">
+            <p className="max-w-lg text-[11px] font-medium leading-relaxed text-slate-600 sm:text-sm md:text-base">
               {currentSlider?.subtitle ||
                 'Pusat informasi lengkap untuk membantu siswa menemukan tempat PKL yang sesuai minat dan kebutuhan'}
             </p>
           </div>
 
-          {/* Form Pencarian */}
-          <form onSubmit={handleSearch} className="pt-2 flex items-center gap-2 max-w-md">
-            <div className="relative flex-1">
-              {/* Icon PNG Pengganti Emoji */}
-              <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
+          <form onSubmit={handleSearch} className="flex max-w-md items-center gap-2 pt-1">
+            <div className="relative min-w-0 flex-1">
+              <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
                 <Image
                   src="/icons/searchabu.png"
                   alt="Cari"
@@ -110,12 +110,12 @@ export default function HeroSection() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama tempat, jurusan..."
-                className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#182752] bg-white shadow-sm text-slate-800 placeholder-slate-400"
+                className="w-full rounded-full border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-xs text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#182752] sm:text-sm"
               />
             </div>
             <button
               type="submit"
-              className="bg-[#182752] hover:bg-[#111c3b] text-white text-xs sm:text-sm font-semibold px-6 py-2.5 rounded-full transition cursor-pointer shadow-sm shrink-0"
+              className="shrink-0 cursor-pointer rounded-full bg-[#182752] px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#111c3b] sm:px-6 sm:text-sm"
             >
               Cari
             </button>
@@ -123,15 +123,15 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Indikator Titik Slider */}
+      {/* Titik slider */}
       {sliders.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center gap-2">
+        <div className="absolute left-1/2 top-48 z-20 flex -translate-x-1/2 items-center justify-center gap-2 sm:top-64 md:bottom-4 md:top-auto">
           {sliders.map((_, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setActiveSlide(idx)}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+              className={`h-2 cursor-pointer rounded-full transition-all duration-300 ${
                 activeSlide === idx
                   ? 'w-6 bg-[#182752]'
                   : 'w-2 bg-slate-300 hover:bg-slate-400'
