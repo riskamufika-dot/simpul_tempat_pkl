@@ -88,20 +88,7 @@ export default function HeaderDaftarTempat({ kata, onKata, onCari, gambar = [] }
         {/* Panah (sembunyi di HP) dan titik */}
         {jumlah > 1 && (
           <>
-            <button
-              onClick={sebelumnya}
-              aria-label="Foto sebelumnya"
-              className="absolute left-3 top-1/2 z-20 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white sm:flex"
-            >
-              ‹
-            </button>
-            <button
-              onClick={berikutnya}
-              aria-label="Foto berikutnya"
-              className="absolute right-3 top-1/2 z-20 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow transition hover:bg-white sm:flex"
-            >
-              ›
-            </button>
+           
 
             <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
               {gambar.map((_, i) => (

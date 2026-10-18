@@ -26,7 +26,8 @@ export default function KategoriJurusan() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const mapped: JurusanItem[] = majors.map((m: any) => {
             const code = m.code || m.abbreviation || 'UMUM';
-            const countValue = m.companies_count ?? (Array.isArray(m.companies) ? m.companies.length : 0);
+            const countValue =
+              m.companies_count ?? (Array.isArray(m.companies) ? m.companies.length : 0);
 
             let fallbackLogo = '/images/logo pplg.png';
             const lowerCode = code.toLowerCase();
@@ -71,7 +72,7 @@ export default function KategoriJurusan() {
           {dataJurusan.map((item) => (
             <div
               key={item.id}
-              className="aspect-square sm:aspect-auto bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-slate-900 shadow-xl hover:shadow-2xl sm:hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+              className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-slate-900 shadow-xl hover:shadow-2xl sm:hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-center mb-3 sm:mb-6">
@@ -92,13 +93,9 @@ export default function KategoriJurusan() {
                   </span>
                 </div>
 
-                <h3 className="text-left font-bold text-[11px] sm:text-lg text-gray-900 leading-snug mb-1.5 sm:mb-2 line-clamp-2 sm:line-clamp-none sm:min-h-[52px]">
-                  {item.name}
-                </h3>
-
-                <p className="text-left text-gray-500 text-[10px] sm:text-xs leading-relaxed mb-2 sm:mb-6 font-normal line-clamp-2 sm:line-clamp-3">
-                  {item.description}
-                </p>
+               <h3 className="text-left font-bold text-[11px] sm:text-lg text-gray-900 leading-snug mb-3 sm:mb-5 line-clamp-2 sm:line-clamp-none sm:min-h-[52px]">
+  {item.name}
+</h3>
               </div>
 
               <div>

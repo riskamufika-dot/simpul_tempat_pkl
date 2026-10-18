@@ -187,7 +187,7 @@ function DaftarTempatContent() {
   }, [data, kata, bidang, jurusan]);
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-900">
+   <main className="min-h-screen bg-slate-800 text-white">
       <Navbar />
 
       <HeaderDaftarTempat
@@ -199,7 +199,7 @@ function DaftarTempatContent() {
 
       <div className="mx-auto max-w-7xl px-3 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8">
         {/* Bar filter */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <FilterTempat
             bidang={bidang}
             jurusan={jurusan}
@@ -208,9 +208,9 @@ function DaftarTempatContent() {
             onBidang={setBidang}
             onJurusan={setJurusan}
           />
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-gray-200">
             Ditemukan{" "}
-            <strong className="text-blue-900">{hasilFilter.length}</strong> tempat PKL
+            <strong className="text-white">{hasilFilter.length}</strong> tempat PKL
           </span>
         </div>
 

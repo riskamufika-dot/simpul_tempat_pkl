@@ -59,8 +59,8 @@ export default function StepsSection() {
     <section className="bg-white py-20 px-6 sm:px-10 lg:px-16 text-gray-900 w-full overflow-hidden">
       <div className="max-w-6xl mx-auto space-y-24">
         <div className="text-center">
-          <span className="text-xs font-semibold text-gray-500 tracking-wider">
-            Langkah
+          <span className="text-l font-semibold text-gray-500 tracking-wider">
+            Baca Dulu Sebelum Mencari
           </span>
         </div>
 
