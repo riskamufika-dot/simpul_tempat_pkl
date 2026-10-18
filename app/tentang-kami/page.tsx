@@ -99,7 +99,7 @@ export default function TentangKamiPage() {
               MENGAPA SIMPUL DIBUAT?
             </span>
             <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl leading-snug">
-              Untuk menjawab tantangan mencari tempat PKL.
+              Mencari Tempat PKL Jadi Lebih Mudah
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-slate-300">
               Siswa sering kesulitan menemukan informasi tempat PKL karena informasi yang tersebar di berbagai sumber, sulit menyesuaikan dengan jurusan, dan harus membandingkan banyak pilihan secara manual. SIMPUL hadir untuk mengatasi masalah tersebut dengan menyediakan semua informasi dalam satu platform.
@@ -153,7 +153,7 @@ export default function TentangKamiPage() {
               TUJUAN KAMI
             </span>
             <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl leading-snug">
-              Memberikan solusi terbaik untuk perjalanan PKL kamu.
+              Membantu Siswa Menentukan Pilihan PKL
             </h2>
             <p className="mt-4 text-sm leading-relaxed text-slate-300">
               SIMPUL hadir dengan tujuan untuk memudahkan siswa SMK dalam mencari, memilih, dan membandingkan tempat PKL, serta menyediakan informasi yang lengkap dan terpercaya dalam satu platform.
