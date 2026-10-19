@@ -498,7 +498,27 @@ export default function PopUpBandingkan({
             </div>
           )}
         </div>
+
+        {/* Tombol Aksi */}
+        <div className="flex items-center justify-between gap-3 mt-6 sm:mt-8 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={() => {
+              if (onClear) onClear();
+            }}
+            className="text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 hover:underline transition cursor-pointer"
+          >
+            Kosongkan Pilihan
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 sm:px-8 py-2 sm:py-2.5 rounded-full bg-gray-200 text-gray-700 text-xs sm:text-sm font-semibold hover:bg-gray-300 transition cursor-pointer"
+          >
+            Tutup
+          </button>
+        </div>
       </div>
-      </div> 
+    </div>
   );
 }
