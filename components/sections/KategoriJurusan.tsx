@@ -24,10 +24,21 @@ export default function KategoriJurusan() {
         const majors = await getMajors();
         if (Array.isArray(majors) && majors.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const mapped: JurusanItem[] = majors.map((m: any) => {
-            const code = m.code || m.abbreviation || 'UMUM';
+          const mapped: JurusanItem[] = majors.map((m: any, index: number) => {
+            const code =
+              m.code ||
+              m.abbreviation ||
+              m.attributes?.code ||
+              m.attributes?.abbreviation ||
+              'UMUM';
             const countValue =
-              m.companies_count ?? (Array.isArray(m.companies) ? m.companies.length : 0);
+              m.companies_count ??
+              m.attributes?.companies_count ??
+              (Array.isArray(m.companies)
+                ? m.companies.length
+                : Array.isArray(m.attributes?.companies?.data)
+                ? m.attributes.companies.data.length
+                : 0);
 
             let fallbackLogo = '/images/logo pplg.png';
             const lowerCode = code.toLowerCase();
@@ -35,14 +46,23 @@ export default function KategoriJurusan() {
             if (lowerCode.includes('mplb')) fallbackLogo = '/images/logo mplb.png';
             if (lowerCode.includes('pm')) fallbackLogo = '/images/logo pm.png';
 
+            const rawLogo =
+              m.logo?.url ||
+              m.icon?.url ||
+              m.attributes?.logo?.data?.attributes?.url ||
+              m.attributes?.icon?.data?.attributes?.url;
+
             return {
-              id: m.id,
+              id: m.id ?? m.documentId ?? `jurusan-${index}`,
               code: code,
-              name: m.name || m.title || '',
+              name: m.name || m.title || m.attributes?.name || m.attributes?.title || '',
               count: `${countValue} Tempat`,
-              description: m.description || `Tempat PKL siswa jurusan ${code}`,
-              imageSrc: m.logo?.url || m.icon?.url || fallbackLogo,
-              queryFilter: m.name || code,
+              description:
+                m.description ||
+                m.attributes?.description ||
+                `Tempat PKL siswa jurusan ${code}`,
+              imageSrc: rawLogo || fallbackLogo,
+              queryFilter: m.name || m.attributes?.name || code,
             };
           });
           setDataJurusan(mapped);
@@ -69,9 +89,9 @@ export default function KategoriJurusan() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {dataJurusan.map((item) => (
+          {dataJurusan.map((item, index) => (
             <div
-              key={item.id}
+              key={item.id ?? index}
               className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 text-slate-900 shadow-xl hover:shadow-2xl sm:hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
@@ -93,9 +113,9 @@ export default function KategoriJurusan() {
                   </span>
                 </div>
 
-               <h3 className="text-left font-bold text-[11px] sm:text-lg text-gray-900 leading-snug mb-3 sm:mb-5 line-clamp-2 sm:line-clamp-none sm:min-h-[52px]">
-  {item.name}
-</h3>
+                <h3 className="text-left font-bold text-[11px] sm:text-lg text-gray-900 leading-snug mb-3 sm:mb-5 line-clamp-2 sm:line-clamp-none sm:min-h-[52px]">
+                  {item.name}
+                </h3>
               </div>
 
               <div>

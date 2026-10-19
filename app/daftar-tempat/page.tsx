@@ -13,7 +13,7 @@ import PopUpDetail, { CompanyDetail } from "@/components/modals/PopUpDetail";
 import { useCompare } from "@/components/layout/DaftarPerbandingan";
 import {
   getTempatPKL,
-  getHeroSliders,
+  getHeroSlidersDaftarTempat,
   getBusinessFields,
   getMajors,
 } from "@/lib/strapi";
@@ -21,7 +21,6 @@ import { TempatPKL } from "@/types";
 
 /* ---------- Helper ---------- */
 
-// "Pemasaran (PM)" -> "pemasaran" (untuk membandingkan jurusan)
 const normalJurusan = (j: string) =>
   (j || "").replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
 
@@ -63,7 +62,6 @@ function DaftarTempatContent() {
   const queryJurusan = searchParams.get("jurusan") || "";
   const querySearch = searchParams.get("search") || "";
 
-  // Pilihan perbandingan dibagi ke seluruh halaman (dari DaftarPerbandingan)
   const { terpilih, toggleBandingkan, hapus, openCompare } = useCompare();
 
   const [data, setData] = useState<TempatPKL[]>([]);
@@ -78,70 +76,118 @@ function DaftarTempatContent() {
   const [jurusan, setJurusan] = useState(queryJurusan);
   const [detailItem, setDetailItem] = useState<CompanyDetail | null>(null);
 
-  // Sinkronkan filter saat query URL berubah
   useEffect(() => {
     if (queryJurusan) setJurusan(queryJurusan);
     if (querySearch) setKata(querySearch);
   }, [queryJurusan, querySearch]);
 
-  // Ambil semua data dari Strapi (bisa dipanggil ulang lewat tombol "Coba lagi")
- const CACHE_KEY = "simpul-tempat-cache";
-const CACHE_MS = 5 * 60 * 1000; // 5 menit
+  const CACHE_KEY = "simpul-tempat-cache-v6";
+  const CACHE_MS = 5 * 60 * 1000; // 5 menit
 
-const loadData = useCallback(async () => {
-  setError(false);
+  const loadData = useCallback(async () => {
+    setError(false);
 
-  // Tampilkan data tersimpan dulu kalau masih segar
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const { waktu, companies } = JSON.parse(raw);
-      if (Date.now() - waktu < CACHE_MS && Array.isArray(companies)) {
-        setData(companies);
-        setLoading(false);
-      } else {
-        setLoading(true);
+    let hasValidCache = false;
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (Date.now() - cached.waktu < CACHE_MS) {
+          if (Array.isArray(cached.companies) && cached.companies.length > 0) {
+            setData(cached.companies);
+          }
+          if (Array.isArray(cached.sliders) && cached.sliders.length > 0) {
+            setHeroImages(cached.sliders);
+          }
+          if (Array.isArray(cached.bidang) && cached.bidang.length > 0) {
+            setMasterBidang(cached.bidang);
+          }
+          if (Array.isArray(cached.majors) && cached.majors.length > 0) {
+            setMasterJurusan(cached.majors);
+          }
+          hasValidCache = true;
+          setLoading(false);
+        }
       }
-    } else {
+    } catch {
+      hasValidCache = false;
+    }
+
+    if (!hasValidCache) {
       setLoading(true);
     }
-  } catch {
-    setLoading(true);
-  }
 
-  try {
-    const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
-      getTempatPKL(),
-      getHeroSliders(),
-      getBusinessFields(),
-      getMajors(),
-    ]);
-
-    setData(resCompanies);
     try {
-      sessionStorage.setItem(
-        CACHE_KEY,
-        JSON.stringify({ waktu: Date.now(), companies: resCompanies })
-      );
-    } catch {}
+      const [resCompanies, resSliders, resBidangRaw, resMajorsRaw] = await Promise.all([
+        getTempatPKL(),
+        getHeroSlidersDaftarTempat(),
+        getBusinessFields(),
+        getMajors(),
+      ]);
 
-    // ...baris setMasterBidang, setMasterJurusan, setHeroImages tetap sama
-  } catch (err) {
-    console.error("Gagal memuat data katalog:", err);
-    setData((d) => {
-      if (d.length === 0) setError(true); // error hanya kalau tidak ada data sama sekali
-      return d;
-    });
-  } finally {
-    setLoading(false);
-  }
-}, []);
+      // Ekstrak nama string bidang
+      const cleanBidangList = Array.isArray(resBidangRaw)
+        ? resBidangRaw
+            .map((b: any) =>
+              typeof b === "string"
+                ? b
+                : b.name || b.nama || b.attributes?.name || b.attributes?.nama || ""
+            )
+            .filter(Boolean)
+        : [];
+
+      // Ekstrak label string jurusan
+      const cleanJurusanList = Array.isArray(resMajorsRaw)
+        ? resMajorsRaw
+            .map((m: any) => {
+              if (typeof m === "string") return m;
+              const nama =
+                m.name || m.nama || m.attributes?.name || m.attributes?.nama || "";
+              const kode =
+                m.code ||
+                m.abbreviation ||
+                m.attributes?.code ||
+                m.attributes?.abbreviation ||
+                "";
+              if (!nama && !kode) return null;
+              return kode ? `${nama} (${kode})` : nama;
+            })
+            .filter(Boolean)
+        : [];
+
+      setData(resCompanies);
+      setHeroImages(resSliders);
+      setMasterBidang(cleanBidangList);
+      setMasterJurusan(cleanJurusanList);
+
+      try {
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            waktu: Date.now(),
+            companies: resCompanies,
+            sliders: resSliders,
+            bidang: cleanBidangList,
+            majors: cleanJurusanList,
+          })
+        );
+      } catch {}
+    } catch (err) {
+      console.error("Gagal memuat data katalog:", err);
+      setData((d) => {
+        if (d.length === 0) setError(true);
+        return d;
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Dropdown Bidang: master Business Field + bidang perusahaan yang ada di data
+  // Dropdown Bidang
   const daftarBidang = useMemo(() => {
     const s = new Set<string>(masterBidang);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,10 +199,12 @@ const loadData = useCallback(async () => {
     return Array.from(s).filter(Boolean).sort();
   }, [data, masterBidang]);
 
-  // Dropdown Jurusan: hanya dari tabel Major di Strapi
-  const daftarJurusan = useMemo(() => [...masterJurusan].sort(), [masterJurusan]);
+  // Dropdown Jurusan
+  const daftarJurusan = useMemo(() => {
+    return [...masterJurusan].sort();
+  }, [masterJurusan]);
 
-  // Filter: pencarian + bidang + jurusan
+  // Filter
   const hasilFilter = useMemo(() => {
     const q = kata.trim().toLowerCase();
     const jFilter = normalJurusan(jurusan);
@@ -185,7 +233,6 @@ const loadData = useCallback(async () => {
     });
   }, [data, kata, bidang, jurusan]);
 
-  // User sedang aktif mencari / memfilter
   const sedangMencari = Boolean(kata.trim() || bidang || jurusan);
 
   return (
@@ -213,7 +260,6 @@ const loadData = useCallback(async () => {
             />
           </div>
 
-          {/* Jumlah hasil, hanya saat mencari / memfilter */}
           {sedangMencari && !loading && !error && (
             <div className="flex justify-end pt-1">
               <span className="text-xs font-medium text-slate-300">

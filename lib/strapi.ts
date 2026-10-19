@@ -17,28 +17,24 @@ export interface AppInfoData {
 function fullUrl(path?: string | null) {
   if (!path) return null;
   const url = path.startsWith("http") ? path : `${STRAPI_URL}${path}`;
-  // Cloudinary: minta lebar 600px dan kualitas otomatis
   return url.includes("res.cloudinary.com")
     ? url.replace("/upload/", "/upload/w_600,q_auto,f_auto/")
     : url;
 }
 
-// Fetch dengan batas waktu
 function fetchTimeout(url: string) {
   return fetch(url, {
-    next: { revalidate: 60 }, // data dipakai ulang selama 60 detik
+    next: { revalidate: 60 },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
 }
 
-// Helper untuk fetch seluruh halaman (jika dibatasi maxLimit 25 oleh Strapi)
 async function fetchAllPages(endpoint: string): Promise<any[]> {
   const PAGE_SIZE = 100;
   const sep = endpoint.includes("?") ? "&" : "?";
   const urlFor = (p: number) =>
     `${STRAPI_URL}${endpoint}${sep}pagination[page]=${p}&pagination[pageSize]=${PAGE_SIZE}`;
 
-  // Halaman 1 dulu, untuk tahu total halaman
   const res = await fetchTimeout(urlFor(1));
   if (!res.ok) throw new Error(`Server menjawab ${res.status}`);
   const json = await res.json();
@@ -46,7 +42,6 @@ async function fetchAllPages(endpoint: string): Promise<any[]> {
 
   const pageCount = Math.min(json.meta?.pagination?.pageCount ?? 1, 10);
   if (pageCount > 1) {
-    // Sisa halaman diambil bersamaan
     const rest = await Promise.all(
       Array.from({ length: pageCount - 1 }, (_, i) =>
         fetchTimeout(urlFor(i + 2))
@@ -60,7 +55,6 @@ async function fetchAllPages(endpoint: string): Promise<any[]> {
   return all;
 }
 
-// Fetch sederhana untuk data pendukung: gagal -> nilai cadangan
 async function getList(endpoint: string, label: string): Promise<any[]> {
   try {
     const res = await fetchTimeout(`${STRAPI_URL}${endpoint}`);
@@ -73,18 +67,56 @@ async function getList(endpoint: string, label: string): Promise<any[]> {
   }
 }
 
-// 1. Ambil Hero Slider aktif
+// 1. Ambil Hero Slider aktif utuh/mentah (Dipakai oleh Beranda.tsx)
 export function getHeroSliders() {
   return getList("/api/hero-sliders?populate=*", "hero sliders");
 }
 
-// 2. Ambil Daftar Jurusan
-export function getMajors() {
+// 1b. Ambil Hero Slider KHUSUS ENTRY 2 (Dipakai oleh Daftar Tempat)
+export async function getHeroSlidersDaftarTempat(): Promise<string[]> {
+  try {
+    const rawList = await getList("/api/hero-sliders?populate=*", "hero sliders");
+    if (!rawList || rawList.length === 0) return [];
+
+    const entry2 = rawList[1] || rawList[0];
+
+    const rawImgs =
+      entry2.images ||
+      entry2.gambar ||
+      entry2.attributes?.images?.data ||
+      entry2.attributes?.gambar?.data ||
+      entry2.attributes?.images ||
+      entry2.attributes?.gambar ||
+      [];
+
+    const resultUrls: string[] = [];
+
+    if (Array.isArray(rawImgs)) {
+      rawImgs.forEach((img: any) => {
+        const u = img.url || img.attributes?.url;
+        const parsed = fullUrl(u);
+        if (parsed) resultUrls.push(parsed);
+      });
+    } else if (rawImgs && typeof rawImgs === "object") {
+      const u = rawImgs.url || rawImgs.attributes?.url;
+      const parsed = fullUrl(u);
+      if (parsed) resultUrls.push(parsed);
+    }
+
+    return resultUrls;
+  } catch (err) {
+    console.error("Gagal parse hero slider entry 2:", err);
+    return [];
+  }
+}
+
+// 2. Ambil Daftar Jurusan (Objek lengkap Strapi: dipakai oleh KategoriJurusan.tsx dan DaftarTempat)
+export function getMajors(): Promise<any[]> {
   return getList("/api/majors?populate=*", "jurusan");
 }
 
-// 3. Ambil Master Bidang Perusahaan
-export function getBusinessFields() {
+// 3. Ambil Master Bidang Perusahaan (Objek lengkap Strapi)
+export function getBusinessFields(): Promise<any[]> {
   return getList("/api/business-fields?populate=*", "business fields");
 }
 
@@ -109,7 +141,6 @@ export async function getAppInfo(): Promise<AppInfoData | null> {
   }
 }
 
-// Helper pembersih daftar string tugas & fasilitas
 function parseList(raw: any): string[] {
   if (!raw) return [];
 
@@ -166,7 +197,6 @@ function parseList(raw: any): string[] {
 // 6. Ambil Tempat PKL dengan penggabungan seluruh data
 export async function getTempatPKL(): Promise<TempatPKL[]> {
   try {
-    // Ambil SEMUA halaman untuk Companies, Company-Roles, dan Roles
     const [companiesData, compRolesData, masterRolesData] = await Promise.all([
       fetchAllPages("/api/companies?populate=*"),
       fetchAllPages("/api/company-roles?populate=*"),
@@ -175,7 +205,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
 
     if (companiesData.length === 0) return [];
 
-    // 1. Peta Master Roles (Role ID / documentId -> { title, tasks })
     const roleMasterMap = new Map<string, { title: string; tasks: string[] }>();
     masterRolesData.forEach((r: any) => {
       const title = r.title || r.name;
@@ -187,7 +216,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
       }
     });
 
-    // 2. Peta Company Roles (ID / documentId -> { role, tasks })
     const companyRoleDetailMap = new Map<string, { role: string; tasks: string[] }>();
     const companyToRolesMap = new Map<string, { role: string; tasks: string[] }[]>();
 
@@ -238,7 +266,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
       }
     });
 
-    // 3. Mapping data Companies
     return companiesData.map((item: any): TempatPKL => {
       const imagesList: string[] = [];
       if (Array.isArray(item.images)) {
@@ -301,7 +328,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         const keyRaw =
           typeof entry === "string" || typeof entry === "number" ? String(entry) : "";
 
-        // 1. Company Role Detail Map
         const detail =
           (keyDocId && companyRoleDetailMap.get(keyDocId)) ||
           (keyId && companyRoleDetailMap.get(keyId)) ||
@@ -312,7 +338,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
           return;
         }
 
-        // 2. Master Role Map
         const masterDetail =
           (keyDocId && roleMasterMap.get(keyDocId)) ||
           (keyId && roleMasterMap.get(keyId)) ||
@@ -329,7 +354,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
           return;
         }
 
-        // 3. Objek entry langsung
         if (typeof entry === "object" && entry !== null) {
           const embeddedTitle =
             entry.role?.title ||
@@ -351,7 +375,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         }
       });
 
-      // Relasi balik dari companyToRolesMap
       const cDocId = String(item.documentId || "");
       const cId = String(item.id || "");
       const linkedRoles =
@@ -361,7 +384,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
 
       linkedRoles.forEach((lr) => addRole(lr.role, lr.tasks));
 
-      // Fallback jika tidak ada relasi role di database
       if (detailedRoles.length === 0) {
         const fallbackTitle = jurusanKode
           ? `Staff (${jurusanKode})`
@@ -431,6 +453,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
     });
   } catch (err) {
     console.error("Gagal mengambil data Company:", err);
-    throw err; // dilempar supaya halaman bisa menampilkan pesan + tombol coba lagi
+    throw err;
   }
 }
