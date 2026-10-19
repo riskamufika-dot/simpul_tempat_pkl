@@ -143,6 +143,23 @@ export default function PopUpDetail({
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
 
+  // Menangani gestur Back / Swipe bawaan HP
+  useEffect(() => {
+    if (!isOpen) return;
+
+    window.history.pushState({ modalDetailOpen: true }, "");
+
+    const handlePopState = () => {
+      onClose();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isOpen, onClose]);
+
   const imageList = useMemo(() => {
     if (!company) return [];
     if (company.images && company.images.length > 0) return company.images;
