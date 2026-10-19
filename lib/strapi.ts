@@ -16,53 +16,48 @@ export interface AppInfoData {
 
 function fullUrl(path?: string | null) {
   if (!path) return null;
-  return path.startsWith("http") ? path : `${STRAPI_URL}${path}`;
+  const url = path.startsWith("http") ? path : `${STRAPI_URL}${path}`;
+  // Cloudinary: minta lebar 600px dan kualitas otomatis
+  return url.includes("res.cloudinary.com")
+    ? url.replace("/upload/", "/upload/w_600,q_auto,f_auto/")
+    : url;
 }
 
 // Fetch dengan batas waktu
 function fetchTimeout(url: string) {
   return fetch(url, {
-    cache: "no-store",
+    next: { revalidate: 60 }, // data dipakai ulang selama 60 detik
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
 }
 
 // Helper untuk fetch seluruh halaman (jika dibatasi maxLimit 25 oleh Strapi)
 async function fetchAllPages(endpoint: string): Promise<any[]> {
-  const allItems: any[] = [];
-  let page = 1;
-  let hasMore = true;
+  const PAGE_SIZE = 100;
+  const sep = endpoint.includes("?") ? "&" : "?";
+  const urlFor = (p: number) =>
+    `${STRAPI_URL}${endpoint}${sep}pagination[page]=${p}&pagination[pageSize]=${PAGE_SIZE}`;
 
-  while (hasMore && page <= 10) {
-    const url = `${STRAPI_URL}${endpoint}${
-      endpoint.includes("?") ? "&" : "?"
-    }pagination[page]=${page}&pagination[pageSize]=50`;
+  // Halaman 1 dulu, untuk tahu total halaman
+  const res = await fetchTimeout(urlFor(1));
+  if (!res.ok) throw new Error(`Server menjawab ${res.status}`);
+  const json = await res.json();
+  const all: any[] = [...(json.data || [])];
 
-    try {
-      const res = await fetchTimeout(url);
-      if (!res.ok) throw new Error(`Server menjawab ${res.status}`);
-
-      const json = await res.json();
-      const items = json.data || [];
-      if (items.length === 0) break;
-
-      allItems.push(...items);
-
-      const pageCount = json.meta?.pagination?.pageCount;
-      if (pageCount && page >= pageCount) {
-        hasMore = false;
-      } else if (items.length < 50 && !pageCount) {
-        hasMore = false;
-      } else {
-        page++;
-      }
-    } catch (err) {
-      if (page === 1) throw err; // gagal total: biar halaman tahu
-      break; // gagal di halaman lanjutan: pakai data yang sudah ada
-    }
+  const pageCount = Math.min(json.meta?.pagination?.pageCount ?? 1, 10);
+  if (pageCount > 1) {
+    // Sisa halaman diambil bersamaan
+    const rest = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, i) =>
+        fetchTimeout(urlFor(i + 2))
+          .then((r) => (r.ok ? r.json() : { data: [] }))
+          .then((j) => j.data || [])
+          .catch(() => [])
+      )
+    );
+    rest.forEach((items) => all.push(...items));
   }
-
-  return allItems;
+  return all;
 }
 
 // Fetch sederhana untuk data pendukung: gagal -> nilai cadangan

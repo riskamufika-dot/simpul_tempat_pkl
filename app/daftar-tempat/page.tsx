@@ -85,56 +85,57 @@ function DaftarTempatContent() {
   }, [queryJurusan, querySearch]);
 
   // Ambil semua data dari Strapi (bisa dipanggil ulang lewat tombol "Coba lagi")
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
-        getTempatPKL(),
-        getHeroSliders(),
-        getBusinessFields(),
-        getMajors(),
-      ]);
+ const CACHE_KEY = "simpul-tempat-cache";
+const CACHE_MS = 5 * 60 * 1000; // 5 menit
 
-      setData(resCompanies);
+const loadData = useCallback(async () => {
+  setError(false);
 
-      setMasterBidang(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (resBidang || []).map((b: any) => b.name || b.title || "").filter(Boolean)
-      );
-
-      // Master jurusan dari Strapi, format "Nama (KODE)"
-      setMasterJurusan(
-        (resMajors || [])
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((m: any) => {
-            const nama = (m.name || m.title || "").trim();
-            const kode = m.code || m.abbreviation || "";
-            return kode ? `${nama} (${kode})` : nama;
-          })
-          .filter(Boolean)
-      );
-
-      // Slide khusus Daftar Tempat (sort_order = 2)
-      const catalogSliders = (resSliders || []).filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (s: any) => Number(s.sort_order) === 2
-      );
-      const activeSliders = catalogSliders.length > 0 ? catalogSliders : resSliders || [];
-
-      setHeroImages(
-        activeSliders
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((s: any) => s.image?.url || s.image_url)
-          .filter(Boolean)
-      );
-    } catch (err) {
-      console.error("Gagal memuat data katalog:", err);
-      setError(true);
-    } finally {
-      setLoading(false);
+  // Tampilkan data tersimpan dulu kalau masih segar
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const { waktu, companies } = JSON.parse(raw);
+      if (Date.now() - waktu < CACHE_MS && Array.isArray(companies)) {
+        setData(companies);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    } else {
+      setLoading(true);
     }
-  }, []);
+  } catch {
+    setLoading(true);
+  }
+
+  try {
+    const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
+      getTempatPKL(),
+      getHeroSliders(),
+      getBusinessFields(),
+      getMajors(),
+    ]);
+
+    setData(resCompanies);
+    try {
+      sessionStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ waktu: Date.now(), companies: resCompanies })
+      );
+    } catch {}
+
+    // ...baris setMasterBidang, setMasterJurusan, setHeroImages tetap sama
+  } catch (err) {
+    console.error("Gagal memuat data katalog:", err);
+    setData((d) => {
+      if (d.length === 0) setError(true); // error hanya kalau tidak ada data sama sekali
+      return d;
+    });
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     loadData();

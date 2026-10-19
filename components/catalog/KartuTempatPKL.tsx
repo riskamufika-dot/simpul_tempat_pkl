@@ -17,6 +17,8 @@ export default function KartuTempatPKL({ tempat, dipilih, onDetail, onBandingkan
         {tempat.gambar && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+          loading="lazy"
+          decoding="async"
             src={tempat.gambar}
             alt={tempat.nama}
             className="h-full w-full object-cover"
