@@ -72,40 +72,65 @@ export function getHeroSliders() {
   return getList("/api/hero-sliders?populate=*", "hero sliders");
 }
 
-// 1b. Ambil Hero Slider KHUSUS ENTRY 2 (Dipakai oleh Daftar Tempat)
+// 1b. Ambil Hero Slider KHUSUS DAFTAR TEMPAT (Entry 2)
 export async function getHeroSlidersDaftarTempat(): Promise<string[]> {
   try {
     const rawList = await getList("/api/hero-sliders?populate=*", "hero sliders");
     if (!rawList || rawList.length === 0) return [];
 
-    const entry2 = rawList[1] || rawList[0];
-
-    const rawImgs =
-      entry2.images ||
-      entry2.gambar ||
-      entry2.attributes?.images?.data ||
-      entry2.attributes?.gambar?.data ||
-      entry2.attributes?.images ||
-      entry2.attributes?.gambar ||
-      [];
-
     const resultUrls: string[] = [];
 
-    if (Array.isArray(rawImgs)) {
-      rawImgs.forEach((img: any) => {
-        const u = img.url || img.attributes?.url;
-        const parsed = fullUrl(u);
-        if (parsed) resultUrls.push(parsed);
-      });
-    } else if (rawImgs && typeof rawImgs === "object") {
-      const u = rawImgs.url || rawImgs.attributes?.url;
-      const parsed = fullUrl(u);
-      if (parsed) resultUrls.push(parsed);
+    const extractUrl = (img: any) => {
+      if (!img) return;
+      if (typeof img === "string") {
+        const u = fullUrl(img);
+        if (u) resultUrls.push(u);
+        return;
+      }
+      const rawUrl =
+        img.url ||
+        img.attributes?.url ||
+        img.formats?.large?.url ||
+        img.formats?.medium?.url;
+      const u = fullUrl(rawUrl);
+      if (u) resultUrls.push(u);
+    };
+
+    // 1. Cari SEMUA entri yang ditandai untuk daftar tempat (sort_order === 2)
+    const entriesDaftarTempat = rawList.filter(
+      (s: any) => Number(s.sort_order ?? s.attributes?.sort_order) === 2
+    );
+
+    // Tentukan entri target: jika ada filter khusus ambil itu, jika tidak ambil entri ke-2 (index 1)
+    const targetEntries =
+      entriesDaftarTempat.length > 0
+        ? entriesDaftarTempat
+        : [rawList[1] || rawList[0]];
+
+    for (const entry of targetEntries) {
+      // Periksa semua kemungkinan struktur field gambar di Strapi
+      const mediaField =
+        entry.images ||
+        entry.gambar ||
+        entry.attributes?.images ||
+        entry.attributes?.gambar ||
+        entry.image ||
+        entry.attributes?.image;
+
+      const mediaData = mediaField?.data !== undefined ? mediaField.data : mediaField;
+
+      if (Array.isArray(mediaData)) {
+        mediaData.forEach(extractUrl);
+      } else if (mediaData) {
+        extractUrl(mediaData);
+      }
+
+      if (entry.image_url) extractUrl(entry.image_url);
     }
 
-    return resultUrls;
+    return Array.from(new Set(resultUrls));
   } catch (err) {
-    console.error("Gagal parse hero slider entry 2:", err);
+    console.error("Gagal parse hero slider daftar tempat:", err);
     return [];
   }
 }
