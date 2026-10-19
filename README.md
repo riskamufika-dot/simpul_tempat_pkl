@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# SIMPUL
+### Sistem Informasi Magang & Pilihan untuk Lapangan
 
-First, run the development server:
+SIMPUL (Sistem Informasi Magang & Pilihan untuk Lapangan) adalah platform yang membantu siswa menemukan dan membandingkan tempat PKL berdasarkan bidang, lokasi, dan persyaratan. Dengan informasi yang terpusat, SIMPUL memudahkan siswa memilih tempat PKL yang sesuai dengan jurusan, kebutuhan, dan minat mereka.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Latar Belakang
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+siswa sering mengalami kesulitan dalam mencari informasi tempat PKL yang sesuai dengan jurusan dan bidang keahlian mereka. Informasi tempat PKL masih tersebar di berbagai sumber, sehingga siswa perlu mencari dan memeriksa informasi satu per satu. Selain itu, siswa juga kesulitan membandingkan beberapa pilihan tempat PKL berdasarkan lokasi, bidang pekerjaan, dan persyaratan. Oleh karena itu, SIMPUL hadir sebagai platform informasi terpusat yang membantu siswa mencari dan mempertimbangkan tempat PKL dengan lebih mudah.  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tujuan
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Memudahkan siswa mencari tempat PKL.
+- Membantu siswa memilih tempat PKL sesuai jurusan dan bidang. 
+- Memudahkan perbandingan beberapa pilihan tempat PKL.
+- Menyediakan informasi tempat PKL secara terpusat.
 
-## Learn More
+## Fitur Utama
 
-To learn more about Next.js, take a look at the following resources:
+- Daftar tempat PKL.
+- Filter berdasarkan bidang dan jurusan.
+- Informasi detail perusahaan atau instansi.
+- Fitur perbandingan tempat PKL.
+- Halaman Tentang Kami.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Target Pengguna
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Siswa SMK yang akan melaksanakan Praktik Kerja Lapangan (PKL).
 
-## Deploy on Vercel
+## Teknologi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Sesuaikan dengan teknologi yang digunakan dalam repository:
+- Frontend: Next.js, React, TypeScript, Tailwind CSS.
+- Backend: Strapi.
+- Database: MySQL.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Dokumentasi
+
+- [Commands](docs/commands.md)
+- [Product Requirements Document](docs/PRD.md)
+
+## Menjalankan Project
+
+Lihat dokumentasi [commands.md](docs/commands.md)
+untuk panduan instalasi dan menjalankan aplikasi.
+
+## Status Project
+
+Dalam tahap pengembangan dan integrasi frontend
+dengan backend.
+
+## Tim Pengembang
+
+Kelompok: SYNERGY TECH (TEAM B)
+Nama Kelompok : Cici Wahyuningsih
+                Imelda Novianti
+                Riska Mufika
+                Shelva Demiya
