@@ -72,6 +72,17 @@ export default function PopUpBandingkan({
 
   const isVisible = (id: string) => selectedParams.includes(id);
 
+  // Mengubah berbagai bentuk data jam kerja (string, array, object) menjadi daftar baris teks
+  const toLines = (v: any): string[] => {
+    if (!v) return [];
+    if (Array.isArray(v)) return v.flatMap(toLines);
+    if (typeof v === "object") return Object.values(v).flatMap(toLines);
+    return String(v)
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  };
+
   const formatPlace = (place: any, index: number) => {
     if (!place) return null;
 
@@ -124,18 +135,20 @@ export default function PopUpBandingkan({
         "/placeholder.png",
       address:
         place.address || place.alamat || place.lokasi || "Alamat belum tersedia",
-      shift1:
-        place.shift1 ||
-        place.jamKerja?.[0] ||
-        place.jam_kerja?.shift1 ||
-        place.workHours?.shift1 ||
-        "Shift 1 (Pagi): 08.00 – 16.00 WIB",
-      shift2:
-        place.shift2 ||
-        place.jamKerja?.[1] ||
-        place.jam_kerja?.shift2 ||
-        place.workHours?.shift2 ||
-        "Shift 2 (Siang): 13.00 – 21.00 WIB",
+      jamKerjaList: (() => {
+        const lines = Array.from(
+          new Set([
+            ...toLines(place.jamKerja),
+            ...toLines(place.jam_kerja),
+            ...toLines(place.workHours),
+            ...toLines(place.shift1),
+            ...toLines(place.shift2),
+          ])
+        );
+        return lines.length > 0
+          ? lines
+          : ["Shift 1 (Pagi): 08.00 – 16.00 WIB"];
+      })(),
       quota: place.quotaNote || place.quota || place.kuota || "Tersedia",
       detailedRoles: extractedDetailedRoles,
       roles: roleOptions.length > 0 ? roleOptions : ["Administrasi Operasional"],
@@ -367,8 +380,9 @@ export default function PopUpBandingkan({
               <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
                 {comparedList.map((place: any) => (
                   <div key={place.id} className="text-[11px] sm:text-sm text-gray-800 leading-relaxed space-y-0.5">
-                    <p>{place.shift1}</p>
-                    <p>{place.shift2}</p>
+                    {place.jamKerjaList.map((line: string, i: number) => (
+                      <p key={i}>{line}</p>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -484,26 +498,7 @@ export default function PopUpBandingkan({
             </div>
           )}
         </div>
-
-        {/* Footer Tombol */}
-        <div className="flex items-center justify-between pt-6 mt-4 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onClear}
-            className="text-red-600 hover:text-red-700 font-bold text-xs sm:text-base transition cursor-pointer"
-          >
-            Kosongkan Pilihan
-          </button>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-[#e2e8f0] hover:bg-[#cbd5e1] text-gray-800 font-semibold px-6 sm:px-8 py-2 rounded-full text-xs sm:text-sm transition cursor-pointer"
-          >
-            Tutup
-          </button>
-        </div>
       </div>
-    </div>
+      </div> 
   );
 }
