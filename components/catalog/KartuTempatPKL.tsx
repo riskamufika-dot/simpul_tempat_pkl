@@ -20,6 +20,10 @@ export default function KartuTempatPKL({ tempat, dipilih, onDetail, onBandingkan
             src={tempat.gambar}
             alt={tempat.nama}
             className="h-full w-full object-cover"
+            onError={(e) => {
+              e.currentTarget.onerror = null; // cegah perulangan
+              e.currentTarget.src = "/placeholder.png";
+            }}
           />
         )}
       </div>

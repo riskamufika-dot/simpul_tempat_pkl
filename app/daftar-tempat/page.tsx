@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -35,7 +35,7 @@ function toCompanyDetail(t: any): CompanyDetail {
     address: t.jarak ? `${t.alamat} (${t.jarak})` : t.alamat,
     mapsUrl: t.linkMaps ?? undefined,
     imageSrc: t.gambar ?? "/placeholder.png",
-    images: t.images && t.images.length > 0 ? t.images : [t.gambar],
+    images: t.images && t.images.length > 0 ? t.images : [t.gambar ?? "/placeholder.png"],
     workHours: {
       shift1: t.jamKerja?.[0] ?? "-",
       shift2: t.jamKerja?.[1],
@@ -71,6 +71,7 @@ function DaftarTempatContent() {
   const [masterBidang, setMasterBidang] = useState<string[]>([]);
   const [masterJurusan, setMasterJurusan] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const [kata, setKata] = useState(querySearch);
   const [bidang, setBidang] = useState("");
@@ -83,63 +84,63 @@ function DaftarTempatContent() {
     if (querySearch) setKata(querySearch);
   }, [queryJurusan, querySearch]);
 
-  // Ambil semua data dari Strapi
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [resCompanies, resSliders, resBidang, resMajors] =
-          await Promise.all([
-            getTempatPKL(),
-            getHeroSliders(),
-            getBusinessFields(),
-            getMajors(),
-          ]);
+  // Ambil semua data dari Strapi (bisa dipanggil ulang lewat tombol "Coba lagi")
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [resCompanies, resSliders, resBidang, resMajors] = await Promise.all([
+        getTempatPKL(),
+        getHeroSliders(),
+        getBusinessFields(),
+        getMajors(),
+      ]);
 
-        setData(resCompanies);
+      setData(resCompanies);
 
-        setMasterBidang(
+      setMasterBidang(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (resBidang || []).map((b: any) => b.name || b.title || "").filter(Boolean)
+      );
+
+      // Master jurusan dari Strapi, format "Nama (KODE)"
+      setMasterJurusan(
+        (resMajors || [])
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (resBidang || []).map((b: any) => b.name || b.title || "").filter(Boolean)
-        );
+          .map((m: any) => {
+            const nama = (m.name || m.title || "").trim();
+            const kode = m.code || m.abbreviation || "";
+            return kode ? `${nama} (${kode})` : nama;
+          })
+          .filter(Boolean)
+      );
 
-        // Master jurusan dari Strapi, format "Nama (KODE)"
-        setMasterJurusan(
-          (resMajors || [])
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((m: any) => {
-              const nama = (m.name || m.title || "").trim();
-              const kode = m.code || m.abbreviation || "";
-              return kode ? `${nama} (${kode})` : nama;
-            })
-            .filter(Boolean)
-        );
+      // Slide khusus Daftar Tempat (sort_order = 2)
+      const catalogSliders = (resSliders || []).filter(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (s: any) => Number(s.sort_order) === 2
+      );
+      const activeSliders = catalogSliders.length > 0 ? catalogSliders : resSliders || [];
 
-        // Ambil slide khusus Daftar Tempat (sort_order = 2)
-        const catalogSliders = (resSliders || []).filter(
+      setHeroImages(
+        activeSliders
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (s: any) => Number(s.sort_order) === 2
-        );
-
-        const activeSliders =
-          catalogSliders.length > 0 ? catalogSliders : resSliders || [];
-
-        setHeroImages(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          activeSliders
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((s: any) => s.image?.url || s.image_url)
-            .filter(Boolean)
-        );
-      } catch (err) {
-        console.error("Gagal memuat data katalog:", err);
-      } finally {
-        setLoading(false);
-      }
+          .map((s: any) => s.image?.url || s.image_url)
+          .filter(Boolean)
+      );
+    } catch (err) {
+      console.error("Gagal memuat data katalog:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    loadData();
   }, []);
 
-  // Dropdown Bidang: HANYA dari master Business Field di Strapi + bidang perusahaan yang ada di data
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Dropdown Bidang: master Business Field + bidang perusahaan yang ada di data
   const daftarBidang = useMemo(() => {
     const s = new Set<string>(masterBidang);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,10 +153,7 @@ function DaftarTempatContent() {
   }, [data, masterBidang]);
 
   // Dropdown Jurusan: hanya dari tabel Major di Strapi
-  const daftarJurusan = useMemo(
-    () => [...masterJurusan].sort(),
-    [masterJurusan]
-  );
+  const daftarJurusan = useMemo(() => [...masterJurusan].sort(), [masterJurusan]);
 
   // Filter: pencarian + bidang + jurusan
   const hasilFilter = useMemo(() => {
@@ -186,7 +184,7 @@ function DaftarTempatContent() {
     });
   }, [data, kata, bidang, jurusan]);
 
-  // Cek apakah user sedang aktif mencari / memfilter
+  // User sedang aktif mencari / memfilter
   const sedangMencari = Boolean(kata.trim() || bidang || jurusan);
 
   return (
@@ -201,7 +199,7 @@ function DaftarTempatContent() {
       />
 
       <div className="mx-auto max-w-7xl px-3 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8">
-        {/* Bar filter: Membentang penuh 100% selebar container daftar kartu */}
+        {/* Bar filter */}
         <div className="mb-6 w-full space-y-2">
           <div className="w-full">
             <FilterTempat
@@ -214,11 +212,13 @@ function DaftarTempatContent() {
             />
           </div>
 
-          {/* Hanya muncul saat user mengetik kata kunci atau memilih opsi filter */}
-          {sedangMencari && (
+          {/* Jumlah hasil, hanya saat mencari / memfilter */}
+          {sedangMencari && !loading && !error && (
             <div className="flex justify-end pt-1">
               <span className="text-xs font-medium text-slate-300">
-                Ditemukan <strong className="text-white font-bold">{hasilFilter.length}</strong> tempat PKL
+                Ditemukan{" "}
+                <strong className="font-bold text-white">{hasilFilter.length}</strong>{" "}
+                tempat PKL
               </span>
             </div>
           )}
@@ -230,6 +230,20 @@ function DaftarTempatContent() {
             {Array.from({ length: 6 }).map((_, i) => (
               <PlaceSkeleton key={i} />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-300/40 bg-red-500/10 p-10 text-center">
+            <p className="font-semibold text-red-200">Data tempat PKL gagal dimuat</p>
+            <p className="mt-1 text-sm text-slate-300">
+              Periksa koneksi internet kamu, lalu coba lagi.
+            </p>
+            <button
+              type="button"
+              onClick={loadData}
+              className="mt-4 cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-semibold text-[#182752]"
+            >
+              Coba lagi
+            </button>
           </div>
         ) : hasilFilter.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-700 bg-[#162244] p-14 text-center text-slate-300 shadow-sm">
@@ -264,9 +278,7 @@ function DaftarTempatContent() {
         isOpen={Boolean(detailItem)}
         onClose={() => setDetailItem(null)}
         company={detailItem}
-        isComparing={
-          detailItem ? terpilih.some((p) => p.id === detailItem.id) : false
-        }
+        isComparing={detailItem ? terpilih.some((p) => p.id === detailItem.id) : false}
         onBandingkan={(c) => {
           const raw = data.find((d) => d.id === c.id);
           if (raw) toggleBandingkan(raw);

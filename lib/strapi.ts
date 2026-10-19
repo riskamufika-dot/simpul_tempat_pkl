@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TempatPKL } from "@/types";
 
 const STRAPI_URL =
   process.env.NEXT_PUBLIC_STRAPI_URL ?? "https://simpul-production.up.railway.app";
+
+const TIMEOUT_MS = 15000;
 
 export interface AppInfoData {
   title?: string;
@@ -16,6 +19,14 @@ function fullUrl(path?: string | null) {
   return path.startsWith("http") ? path : `${STRAPI_URL}${path}`;
 }
 
+// Fetch dengan batas waktu
+function fetchTimeout(url: string) {
+  return fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+}
+
 // Helper untuk fetch seluruh halaman (jika dibatasi maxLimit 25 oleh Strapi)
 async function fetchAllPages(endpoint: string): Promise<any[]> {
   const allItems: any[] = [];
@@ -23,13 +34,13 @@ async function fetchAllPages(endpoint: string): Promise<any[]> {
   let hasMore = true;
 
   while (hasMore && page <= 10) {
-    try {
-      const url = `${STRAPI_URL}${endpoint}${
-        endpoint.includes("?") ? "&" : "?"
-      }pagination[page]=${page}&pagination[pageSize]=50`;
+    const url = `${STRAPI_URL}${endpoint}${
+      endpoint.includes("?") ? "&" : "?"
+    }pagination[page]=${page}&pagination[pageSize]=50`;
 
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) break;
+    try {
+      const res = await fetchTimeout(url);
+      if (!res.ok) throw new Error(`Server menjawab ${res.status}`);
 
       const json = await res.json();
       const items = json.data || [];
@@ -45,81 +56,55 @@ async function fetchAllPages(endpoint: string): Promise<any[]> {
       } else {
         page++;
       }
-    } catch {
-      break;
+    } catch (err) {
+      if (page === 1) throw err; // gagal total: biar halaman tahu
+      break; // gagal di halaman lanjutan: pakai data yang sudah ada
     }
   }
 
   return allItems;
 }
 
-// 1. Ambil Hero Slider aktif
-export async function getHeroSliders() {
+// Fetch sederhana untuk data pendukung: gagal -> nilai cadangan
+async function getList(endpoint: string, label: string): Promise<any[]> {
   try {
-    const res = await fetch(`${STRAPI_URL}/api/hero-sliders?populate=*`, {
-      cache: "no-store",
-    });
+    const res = await fetchTimeout(`${STRAPI_URL}${endpoint}`);
     if (!res.ok) return [];
     const json = await res.json();
     return json.data || [];
   } catch (err) {
-    console.error("Gagal mengambil hero sliders:", err);
+    console.error(`Gagal mengambil ${label}:`, err);
     return [];
   }
+}
+
+// 1. Ambil Hero Slider aktif
+export function getHeroSliders() {
+  return getList("/api/hero-sliders?populate=*", "hero sliders");
 }
 
 // 2. Ambil Daftar Jurusan
-export async function getMajors() {
-  try {
-    const res = await fetch(`${STRAPI_URL}/api/majors?populate=*`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
-  } catch (err) {
-    console.error("Gagal mengambil jurusan:", err);
-    return [];
-  }
+export function getMajors() {
+  return getList("/api/majors?populate=*", "jurusan");
 }
 
 // 3. Ambil Master Bidang Perusahaan
-export async function getBusinessFields() {
-  try {
-    const res = await fetch(`${STRAPI_URL}/api/business-fields?populate=*`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
-  } catch (err) {
-    console.error("Gagal mengambil business fields:", err);
-    return [];
-  }
+export function getBusinessFields() {
+  return getList("/api/business-fields?populate=*", "business fields");
 }
 
 // 4. Ambil Testimoni
-export async function getTestimonials() {
-  try {
-    const res = await fetch(
-      `${STRAPI_URL}/api/testimonials?filters[is_featured][$eq]=true&populate=*`,
-      { cache: "no-store" }
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
-  } catch (err) {
-    console.error("Gagal mengambil testimoni:", err);
-    return [];
-  }
+export function getTestimonials() {
+  return getList(
+    "/api/testimonials?filters[is_featured][$eq]=true&populate=*",
+    "testimoni"
+  );
 }
 
 // 5. Ambil Info Aplikasi
 export async function getAppInfo(): Promise<AppInfoData | null> {
   try {
-    const res = await fetch(`${STRAPI_URL}/api/app-info?populate=*`, {
-      cache: "no-store",
-    });
+    const res = await fetchTimeout(`${STRAPI_URL}/api/app-info?populate=*`);
     if (!res.ok) return null;
     const json = await res.json();
     return json.data || null;
@@ -152,7 +137,7 @@ function parseList(raw: any): string[] {
         s
           .trim()
           .replace(/^[-•*]\s*/, "")
-          .replace(/^\d+[\.\)]\s*/, "")
+          .replace(/^\d+[.)]\s*/, "")
           .replace(/^["'](.*)["']$/, "$1")
           .trim()
       )
@@ -160,7 +145,7 @@ function parseList(raw: any): string[] {
   }
 
   if (typeof raw === "string" && raw.trim()) {
-    let str = raw.trim();
+    const str = raw.trim();
     if (str.startsWith("[") && str.endsWith("]")) {
       try {
         const parsed = JSON.parse(str);
@@ -173,7 +158,7 @@ function parseList(raw: any): string[] {
         s
           .trim()
           .replace(/^[-•*]\s*/, "")
-          .replace(/^\d+[\.\)]\s*/, "")
+          .replace(/^\d+[.)]\s*/, "")
           .replace(/^["'](.*)["']$/, "$1")
           .trim()
       )
@@ -199,7 +184,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
     const roleMasterMap = new Map<string, { title: string; tasks: string[] }>();
     masterRolesData.forEach((r: any) => {
       const title = r.title || r.name;
-      // Tugas di Master Role Strapi tersimpan di kolom description
       const tasks = parseList(r.description || r.responsibilities || r.tasks);
       if (title) {
         const val = { title, tasks };
@@ -223,13 +207,12 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
 
       let tasks = parseList(
         cr.description ||
-        cr.responsibilities ||
-        cr.tasks ||
-        cr.role?.description ||
-        cr.role?.responsibilities
+          cr.responsibilities ||
+          cr.tasks ||
+          cr.role?.description ||
+          cr.role?.responsibilities
       );
 
-      // Cek relasi ke master role jika ada ID relasi
       const refId1 = String(cr.role?.documentId || "");
       const refId2 = String(cr.role?.id || "");
       const refIdRaw =
@@ -252,7 +235,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
       if (cr.id) companyRoleDetailMap.set(String(cr.id), val);
       if (cr.documentId) companyRoleDetailMap.set(String(cr.documentId), val);
 
-      // Cek relasi balik ke company
       if (cr.company && roleTitle) {
         const compRef = String(cr.company.documentId || cr.company.id || cr.company);
         const existing = companyToRolesMap.get(compRef) || [];
@@ -310,13 +292,9 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
       const addRole = (role: string, tasks: string[]) => {
         if (!role || /^[a-z0-9]{20,}$/i.test(role) || roleNamesSet.has(role)) return;
         roleNamesSet.add(role);
-        detailedRoles.push({
-          role,
-          tasks,
-        });
+        detailedRoles.push({ role, tasks });
       };
 
-      // Cek dari relasi roles / company_roles pada company
       const rawRoles = [
         ...(Array.isArray(item.roles) ? item.roles : []),
         ...(Array.isArray(item.company_roles) ? item.company_roles : []),
@@ -328,7 +306,7 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         const keyRaw =
           typeof entry === "string" || typeof entry === "number" ? String(entry) : "";
 
-        // 1. Cek di Company Role Detail Map
+        // 1. Company Role Detail Map
         const detail =
           (keyDocId && companyRoleDetailMap.get(keyDocId)) ||
           (keyId && companyRoleDetailMap.get(keyId)) ||
@@ -339,7 +317,7 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
           return;
         }
 
-        // 2. Cek di Master Role Map
+        // 2. Master Role Map
         const masterDetail =
           (keyDocId && roleMasterMap.get(keyDocId)) ||
           (keyId && roleMasterMap.get(keyId)) ||
@@ -349,11 +327,14 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
           const directTasks = parseList(
             entry?.description || entry?.responsibilities || entry?.tasks
           );
-          addRole(masterDetail.title, directTasks.length > 0 ? directTasks : masterDetail.tasks);
+          addRole(
+            masterDetail.title,
+            directTasks.length > 0 ? directTasks : masterDetail.tasks
+          );
           return;
         }
 
-        // 3. Cek langsung objek entry jika nama role tertera
+        // 3. Objek entry langsung
         if (typeof entry === "object" && entry !== null) {
           const embeddedTitle =
             entry.role?.title ||
@@ -365,17 +346,17 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
           if (embeddedTitle) {
             const tasks = parseList(
               entry.description ||
-              entry.responsibilities ||
-              entry.tasks ||
-              entry.role?.description ||
-              entry.role?.responsibilities
+                entry.responsibilities ||
+                entry.tasks ||
+                entry.role?.description ||
+                entry.role?.responsibilities
             );
             addRole(embeddedTitle, tasks);
           }
         }
       });
 
-      // Cek relasi balik dari companyToRolesMap
+      // Relasi balik dari companyToRolesMap
       const cDocId = String(item.documentId || "");
       const cId = String(item.id || "");
       const linkedRoles =
@@ -385,7 +366,7 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
 
       linkedRoles.forEach((lr) => addRole(lr.role, lr.tasks));
 
-      // Fallback jika memang tidak ada relasi di database untuk tempat ini
+      // Fallback jika tidak ada relasi role di database
       if (detailedRoles.length === 0) {
         const fallbackTitle = jurusanKode
           ? `Staff (${jurusanKode})`
@@ -439,7 +420,8 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
         fasilitas: parseList(item.facilities),
         testimoni: selectedTestimonial
           ? {
-              nama: selectedTestimonial.full_name || selectedTestimonial.name || "Alumni Siswa",
+              nama:
+                selectedTestimonial.full_name || selectedTestimonial.name || "Alumni Siswa",
               sekolah: selectedTestimonial.school_name || selectedTestimonial.school || "",
               isi:
                 selectedTestimonial.review ||
@@ -454,6 +436,6 @@ export async function getTempatPKL(): Promise<TempatPKL[]> {
     });
   } catch (err) {
     console.error("Gagal mengambil data Company:", err);
-    return [];
+    throw err; // dilempar supaya halaman bisa menampilkan pesan + tombol coba lagi
   }
 }
