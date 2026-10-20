@@ -72,7 +72,7 @@ export default function PopUpBandingkan({
 
   const isVisible = (id: string) => selectedParams.includes(id);
 
-  // Mengubah berbagai bentuk data jam kerja (string, array, object) menjadi daftar baris teks
+  // Mengubah berbagai bentuk data jam kerja menjadi daftar baris teks
   const toLines = (v: any): string[] => {
     if (!v) return [];
     if (Array.isArray(v)) return v.flatMap(toLines);
@@ -119,10 +119,25 @@ export default function PopUpBandingkan({
     }
 
     extractedDetailedRoles = extractedDetailedRoles.filter(
-      (item) => item.role && !/^[a-z0-9]{20,}$/i.test(item.role)
+      (item) => item.role && !/^[a-z0-9]{20,}\$/i.test(item.role)
     );
 
     const roleOptions = extractedDetailedRoles.map((item) => item.role);
+
+    // MENGHAPUS DATA FIKTIF: Menggunakan fallback jujur "Informasi belum tersedia"
+    const rawJamKerja = Array.from(
+      new Set([
+        ...toLines(place.jamKerja),
+        ...toLines(place.jam_kerja),
+        ...toLines(place.workHours),
+        ...toLines(place.shift1),
+        ...toLines(place.shift2),
+      ])
+    );
+
+    const rawTasks = place.tasks || place.tugas || place.hal_dikerjakan || [];
+    const rawFacilities = place.facilities || place.fasilitas || [];
+    const rawRequirements = place.requirements || place.syaratBerkas || place.syarat_berkas || [];
 
     return {
       id: place.id !== undefined ? place.id : index,
@@ -135,45 +150,13 @@ export default function PopUpBandingkan({
         "/placeholder.png",
       address:
         place.address || place.alamat || place.lokasi || "Alamat belum tersedia",
-      jamKerjaList: (() => {
-        const lines = Array.from(
-          new Set([
-            ...toLines(place.jamKerja),
-            ...toLines(place.jam_kerja),
-            ...toLines(place.workHours),
-            ...toLines(place.shift1),
-            ...toLines(place.shift2),
-          ])
-        );
-        return lines.length > 0
-          ? lines
-          : ["Shift 1 (Pagi): 08.00 – 16.00 WIB"];
-      })(),
-      quota: place.quotaNote || place.quota || place.kuota || "Tersedia",
+      jamKerjaList: rawJamKerja.length > 0 ? rawJamKerja : ["Informasi jam kerja belum tersedia"],
+      quota: place.quotaNote || place.quota || place.kuota || "Informasi kuota belum tersedia",
       detailedRoles: extractedDetailedRoles,
-      roles: roleOptions.length > 0 ? roleOptions : ["Administrasi Operasional"],
-      defaultTasks:
-        place.tasks ||
-        place.tugas ||
-        place.hal_dikerjakan || [
-          "Membantu operasional dan administrasi harian",
-          "Membantu pengarsipan dokumen sesuai arahan pembimbing",
-        ],
-      facilities:
-        place.facilities ||
-        place.fasilitas || [
-          "Ruang kerja dan sarana penunjang praktik",
-          "Bimbingan langsung dari pembimbing lapangan",
-          "Sertifikat / Surat Keterangan Selesai PKL",
-        ],
-      requirements:
-        place.requirements ||
-        place.syaratBerkas ||
-        place.syarat_berkas || [
-          "Surat permohonan PKL resmi dari sekolah",
-          "Biodata siswa / Curriculum Vitae (CV)",
-          "Fotokopi Kartu Pelajar (KTA)",
-        ],
+      roles: roleOptions.length > 0 ? roleOptions : ["Posisi belum ditentukan"],
+      defaultTasks: rawTasks.length > 0 ? rawTasks : ["Informasi tugas belum tersedia"],
+      facilities: rawFacilities.length > 0 ? rawFacilities : ["Informasi fasilitas belum tersedia"],
+      requirements: rawRequirements.length > 0 ? rawRequirements : ["Informasi persyaratan belum tersedia"],
     };
   };
 
@@ -303,7 +286,7 @@ export default function PopUpBandingkan({
           </div>
         </div>
 
-        {/* Konten Utama: 2 Kolom Berdampingan di HP & Desktop */}
+        {/* Konten Utama */}
         <div className="w-full text-xs sm:text-sm space-y-3">
           {/* BARIS 1: Profil Perusahaan */}
           <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start">
@@ -356,7 +339,7 @@ export default function PopUpBandingkan({
           {isVisible("lokasi") && (
             <div className="grid grid-cols-12 gap-2 sm:gap-4 py-3 px-2 sm:px-3 rounded-2xl items-start bg-slate-50/70">
               <div className="col-span-12 lg:col-span-2 font-semibold text-gray-500 text-xs sm:text-sm">
-                Lokasi (Jarak):
+                Lokasi:
               </div>
               <div className="col-span-12 lg:col-span-10 grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
                 {comparedList.map((place: any) => (

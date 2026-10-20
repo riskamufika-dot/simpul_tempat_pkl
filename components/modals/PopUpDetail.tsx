@@ -112,7 +112,7 @@ function cleanTaskList(rawTasks: any): string[] {
         .trim()
         .replace(/^[-•*]\s*/, "")
         .replace(/^\d+[.)]\s*/, "")
-        .replace(/^["'](.*)["']$/, "$1")
+        .replace(/^["'](.*)["']\$/, "\$1")
         .trim()
     )
     .filter((s: string) => s.length > 0 && s !== "[" && s !== "]");
@@ -345,6 +345,10 @@ export default function PopUpDetail({
       company.name + " " + company.address
     )}`;
 
+  const phoneVal = company.contacts?.phone || company.contacts?.telepon;
+  const whatsappVal = company.contacts?.whatsapp;
+  const emailVal = company.contacts?.email;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm overflow-y-auto"
@@ -422,9 +426,9 @@ export default function PopUpDetail({
               JAM KERJA
             </span>
             <p className="text-[11px] sm:text-sm font-semibold text-gray-800">
-              {company.workHours.shift1}
+              {company.workHours?.shift1 || "Informasi jam kerja belum tersedia"}
             </p>
-            {company.workHours.shift2 && (
+            {company.workHours?.shift2 && (
               <p className="text-[11px] sm:text-sm font-semibold text-gray-800">
                 {company.workHours.shift2}
               </p>
@@ -435,7 +439,7 @@ export default function PopUpDetail({
               KUOTA SISWA
             </span>
             <p className="text-sm sm:text-base font-extrabold text-gray-900">
-              {company.quota}
+              {company.quota || "Informasi kuota belum tersedia"}
             </p>
           </div>
         </div>
@@ -486,7 +490,7 @@ export default function PopUpDetail({
             </div>
           ) : (
             <p className="text-xs sm:text-sm text-gray-400 italic">
-              Mengikuti arahan mentor dan penempatan unit kerja.
+              Informasi tugas belum tersedia.
             </p>
           )}
         </div>
@@ -512,7 +516,7 @@ export default function PopUpDetail({
                 ))
               ) : (
                 <p className="text-xs text-gray-400 italic">
-                  Sesuai ketentuan sekolah dan instansi penempatan.
+                  Informasi persyaratan belum tersedia.
                 </p>
               )}
             </div>
@@ -537,7 +541,7 @@ export default function PopUpDetail({
                 ))
               ) : (
                 <p className="text-xs text-gray-400 italic">
-                  Fasilitas operasional standar tempat PKL.
+                  Informasi fasilitas belum tersedia.
                 </p>
               )}
             </div>
@@ -570,9 +574,8 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Tombol Aksi: Mobile (Ikon Atas, Teks Bawah) & Desktop (Ikon Samping, Teks Kanan) */}
+        {/* Tombol Aksi */}
         <div className="grid grid-cols-5 gap-1 pt-2 border-t border-slate-100 sm:gap-2">
-          {/* Tombol 1: Maps */}
           <a
             href={mapsHref}
             target="_blank"
@@ -583,7 +586,6 @@ export default function PopUpDetail({
             <span className="truncate">Maps</span>
           </a>
 
-          {/* Tombol 2: Bandingkan */}
           <button
             type="button"
             onClick={() => onBandingkan && onBandingkan(company)}
@@ -597,7 +599,6 @@ export default function PopUpDetail({
             <span className="truncate">{isComparing ? "Terpilih" : "Bandingkan"}</span>
           </button>
 
-          {/* Tombol 3: Review */}
           <button
             type="button"
             onClick={() => setIsReviewOpen(true)}
@@ -607,7 +608,6 @@ export default function PopUpDetail({
             <span className="truncate">Review</span>
           </button>
 
-          {/* Tombol 4: Kontak */}
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
@@ -617,7 +617,6 @@ export default function PopUpDetail({
             <span className="truncate">Kontak</span>
           </button>
 
-          {/* Tombol 5: Tutup */}
           <button
             type="button"
             onClick={onClose}
@@ -742,7 +741,7 @@ export default function PopUpDetail({
           </div>
         )}
 
-        {/* Modal Kontak */}
+        {/* Modal Kontak (KONSISTEN: Menampilkan "Belum tersedia" jika kosong) */}
         {isContactOpen && (
           <div
             className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -767,21 +766,20 @@ export default function PopUpDetail({
               <div className="space-y-3 text-sm mt-4">
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <span className="text-xs text-gray-500">Telepon:</span>
-                  <p className="font-semibold text-gray-800">
-                    {company.contacts?.phone || company.contacts?.telepon || "(0261) 201234"}
+                  <p className={`font-semibold ${phoneVal ? "text-gray-800" : "text-gray-400 italic"}`}>
+                    {phoneVal || "Belum tersedia"}
                   </p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <span className="text-xs text-gray-500">WhatsApp:</span>
-                  <p className="font-semibold text-gray-800">
-                    {company.contacts?.whatsapp || "+62 812-3456-7890"}
+                  <p className={`font-semibold ${whatsappVal ? "text-gray-800" : "text-gray-400 italic"}`}>
+                    {whatsappVal || "Belum tersedia"}
                   </p>
                 </div>
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <span className="text-xs text-gray-500">Email:</span>
-                  <p className="font-semibold text-gray-800 break-all">
-                    {company.contacts?.email ||
-                      `pkl@${company.name.toLowerCase().replace(/\s+/g, "")}.co.id`}
+                  <p className={`font-semibold break-all ${emailVal ? "text-gray-800" : "text-gray-400 italic"}`}>
+                    {emailVal || "Belum tersedia"}
                   </p>
                 </div>
               </div>
