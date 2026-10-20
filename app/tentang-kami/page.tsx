@@ -137,7 +137,7 @@ export default function TentangKamiPage() {
               </div>
               <h3 className="text-base font-semibold text-white">Mudah Dibandingkan</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                Memudahkan siswa membandingkan beberapa pilihan berdasarkan lokasi, bidang, dan informasi lainnya.
+                Memudahkan siswa membandingkan beberapa pilihan berdasarkan jurusan, bidang, dan informasi lainnya.
               </p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function TentangKamiPage() {
               <div>
                 <h4 className="text-sm font-semibold text-white">Memudahkan Pencarian</h4>
                 <p className="mt-1 text-xs text-slate-300">
-                  Membantu siswa menemukan tempat PKL dengan lebih cepat dan mudah.
+                  Membantu siswa mencari tempat PKL berdasarkan jurusan dan bidang.
                 </p>
               </div>
             </div>
