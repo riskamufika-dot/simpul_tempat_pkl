@@ -6,10 +6,6 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCompare } from '@/components/layout/DaftarPerbandingan';
 
-interface NavbarProps {
-  compareCount?: number;
-  onOpenCompare?: () => void;
-}
 
 const menu = [
   { label: 'Beranda', href: '/' },
@@ -17,8 +13,8 @@ const menu = [
   { label: 'Tentang Kami', href: '/tentang-kami' },
 ];
 
-// sesudah
-export default function Navbar(_props: NavbarProps) {
+
+export default function Navbar() {
   const { terpilih, openCompare } = useCompare();
   const compareCount = terpilih.length;
   const onOpenCompare = openCompare;

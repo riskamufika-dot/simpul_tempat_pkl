@@ -78,12 +78,6 @@ export default function HeroSection() {
       {/* Teks & pencarian */}
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
   <div className="max-w-[16rem] space-y-3 text-left sm:max-w-xl sm:space-y-6">
-          <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50/90 px-3 py-1 shadow-xs sm:px-4 sm:py-1.5">
-            <span className="text-[11px] font-semibold tracking-wide text-blue-600 sm:text-xs">
-              Temukan Tempat PKL Terbaik
-            </span>
-          </div>
-
           <div className="space-y-2 sm:space-y-3">
             <h1 className="text-xl font-extrabold leading-tight tracking-tight text-[#182752] sm:text-3xl lg:text-4xl">
               {currentSlider?.title || 'Temukan tempat PKL'}
