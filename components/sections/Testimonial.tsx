@@ -10,8 +10,39 @@ interface TestimonialItem {
   feedback: string;
 }
 
+const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
+  {
+    id: 't-1',
+    name: 'Rizki Pratama',
+    company: 'PT Telkom Indonesia (Witel Sumedang)',
+    feedback:
+      'Pengalaman PKL di Telkom sangat membuka wawasan saya tentang dunia IT industri. Banyak ilmu baru tentang jaringan komputer dan pemeliharaan sistem yang saya pelajari langsung dari para profesional.',
+  },
+  {
+    id: 't-2',
+    name: 'Siti Nurhaliza',
+    company: 'Diskominfo Kab. Sumedang',
+    feedback:
+      'Lingkungan kerjanya sangat suportif dan ramah untuk siswa SMK. Kami dibimbing langsung dalam pengelolaan sistem informasi dan pelayanan publik berbasis digital.',
+  },
+  {
+    id: 't-3',
+    name: 'Ahmad Fauzi',
+    company: 'Bank BJB Cabang Sumedang',
+    feedback:
+      'Sangat cocok untuk jurusan AKL dan MPLB. Saya belajar langsung tentang alur pembukuan, pengarsipan berkas resmi, dan etika komunikasi profesional di kantor.',
+  },
+  {
+    id: 't-4',
+    name: 'Dina Lestari',
+    company: 'Yogya Grand Sumedang',
+    feedback:
+      'Bagi jurusan Pemasaran, PKL di sini melatih mental pelayanan prima, display produk, dan manajemen stok secara nyata. Sangat direkomendasikan!',
+  },
+];
+
 export default function Testimonial() {
-  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
   const [aktif, setAktif] = useState(0);
   const [bisaKiri, setBisaKiri] = useState(false);
   const [bisaKanan, setBisaKanan] = useState(false);
@@ -32,7 +63,9 @@ export default function Testimonial() {
             }))
             .filter((item) => item.feedback.trim() !== '');
 
-          setTestimonials(mapped);
+          if (mapped.length > 0) {
+            setTestimonials(mapped);
+          }
         }
       } catch (err) {
         console.error('Gagal memuat testimoni:', err);

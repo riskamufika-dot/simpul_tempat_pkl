@@ -32,10 +32,10 @@ export default function Footer() {
           <div className="space-y-3">
             <h4 className="font-bold text-sm text-white">Jurusan</h4>
             <ul className="space-y-2 text-gray-300">
-              <li>RPL/PPLG</li>
-              <li>MPLB</li>
-              <li>AKL</li>
-              <li>PM</li>
+              <li><Link href="/daftar-tempat?jurusan=RPL" className="hover:text-white transition-colors">RPL/PPLG</Link></li>
+              <li><Link href="/daftar-tempat?jurusan=MPLB" className="hover:text-white transition-colors">MPLB</Link></li>
+              <li><Link href="/daftar-tempat?jurusan=AKL" className="hover:text-white transition-colors">AKL</Link></li>
+              <li><Link href="/daftar-tempat?jurusan=PM" className="hover:text-white transition-colors">PM</Link></li>
             </ul>
           </div>
 
@@ -43,9 +43,36 @@ export default function Footer() {
           <div className="space-y-3">
             <h4 className="font-bold text-sm text-white">Ikuti Kami</h4>
             <ul className="space-y-2 text-gray-300">
-              <li>Facebook</li>
-              <li>Instagram</li>
-              <li>YouTube</li>
+              <li>
+                <a
+                  href="https://www.facebook.com/share/14uhVhxiUB1/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Facebook
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.instagram.com/smkn2sumedang.official?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Instagram
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://youtube.com/@smkn2sumedang?si=-4xkE4VVyvYL-yz2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  YouTube
+                </a>
+              </li>
             </ul>
           </div>
         </div>

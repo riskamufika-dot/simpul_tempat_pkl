@@ -151,6 +151,8 @@ export function getTestimonials() {
     "/api/testimonials?filters[is_featured][$eq]=true&populate=*",
     "testimoni"
   );
+  if (Array.isArray(featured) && featured.length > 0) return featured;
+  return getList("/api/testimonials?populate=*", "testimoni");
 }
 
 // 5. Ambil Info Aplikasi
