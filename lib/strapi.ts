@@ -146,8 +146,8 @@ export function getBusinessFields(): Promise<any[]> {
 }
 
 // 4. Ambil Testimoni
-export function getTestimonials() {
-  return getList(
+export async function getTestimonials() {
+  const featured = await getList(
     "/api/testimonials?filters[is_featured][$eq]=true&populate=*",
     "testimoni"
   );
